@@ -1,0 +1,32 @@
+{
+  "github_org": "MozillaReality",
+  "github_repo": "FirefoxReality",
+  "path_downloads": "downloads/",
+  "path_downloads_index": "downloads/index.json",
+  "platform_default": "oculusvr",
+  "always_launch_after_install": true,
+  "always_redownload_android_platform_tools": false,
+  "launch_url_default": "http://example.com/",
+  "platforms": {
+    "oculusvr": {
+      "slug": "oculusvr",
+      "name": "Oculus Go"
+    },
+    "googlevr": {
+      "slug": "googlevr",
+      "name": "Google Daydream"
+    },
+    "noapi": {
+      "slug": "noapi",
+      "name": "No API"
+    },
+    "wavevr": {
+      "slug": "wavevr",
+      "name": "VIVE Wave"
+    },
+    "svr": {
+      "slug": "svr",
+      "name": "Snapdragon VR"
+    }
+  }
+}
