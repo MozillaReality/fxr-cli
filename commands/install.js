@@ -8,7 +8,7 @@ const utils = require('../lib/utils.js');
 
 function install (options) {
   options = Object.assign({}, {
-    platformsSlugs: options.platformsSlugs || [SETTINGS.default_platform],
+    platformsSlugs: options.platformsSlugs || [SETTINGS.platform_default],
     forceUpdate: options.forceUpdate,
     url: options.url
   }, options);
