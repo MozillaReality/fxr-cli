@@ -1,0 +1,52 @@
+{
+  "sites": [
+    {
+      "url": "https://research.mozilla.org/mixed-reality/",
+      "name": "Mozilla",
+      "slug": "mozilla"
+    },
+    {
+      "url": "https://www.youtube.com",
+      "name": "YouTube",
+      "slug": "youtube"
+    },
+    {
+      "url": "http://www.bbc.com/news",
+      "name": "BBC",
+      "slug": "bbc"
+    },
+    {
+      "url": "https://www.mlb.com",
+      "name": "MLB",
+      "slug": "mlb"
+    },
+    {
+      "url": "http://www.baidu.com/",
+      "name": "Baidu",
+      "slug": "baidu"
+    },
+    {
+      "url": "https://www.twitch.tv/",
+      "name": "Twitch",
+      "slug": "twitch"
+    },
+    {
+      "url": "https://www.amazon.com/",
+      "name": "Amazon",
+      "slug": "amazon"
+    },
+    {
+      "url": "https://www.nytimes.com/",
+      "name": "NY Times",
+      "slug": "nytimes",
+      "keywords": [
+        "The New York Times"
+      ]
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Ada_Lovelace",
+      "name": "Wikipedia",
+      "slug": "wikipedia"
+    }
+  ]
+}
