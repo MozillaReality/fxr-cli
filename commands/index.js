@@ -1,5 +1,6 @@
 module.exports = {
   download: require('./download.js'),
   install: require('./install.js'),
-  launch: require('./launch.js')
+  launch: require('./launch.js'),
+  test: require('./test.js')
 };
