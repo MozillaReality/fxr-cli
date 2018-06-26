@@ -24,14 +24,16 @@ const uppercaseFirstLetter = utils.uppercaseFirstLetter;
 const PLATFORMS = SETTINGS.platforms;
 const PLATFORMS_SLUGS = SETTINGS.platformsSlugs;
 
-const validCommands = [null, 'download', 'install', 'launch', 'version', 'help'];
+const validCommands = [null, 'download', 'install', 'launch', 'test', 'version', 'help'];
 
 switch (process.argv[2]) {
   case 'fetch':
     process.argv[2] = 'download';
+    break;
   case 'update':
   case 'upgrade':
     process.argv[2] = 'install';
+    break;
   case 'open':
   case 'run':
   case 'serve':
@@ -39,6 +41,11 @@ switch (process.argv[2]) {
   case 'dev':
   case 'url':
     process.argv[2] = 'launch';
+    break;
+  case 'tests':
+  case 't':
+    process.argv[2] = 'test';
+    break;
 }
 
 let parsedCommands = {};
@@ -182,7 +189,12 @@ function launch (url) {
   return platformAction('launch', url);
 }
 
-function platformAction (action, url) {
+function test (url) {
+  const sites = require('./tests/sites/index.json').sites;
+  return platformAction('test', null, sites);
+}
+
+function parseOptions (action, url, sites) {
   const optionDefinitions = [
     {name: 'platform', alias: 'p', type: String, multiple: true, defaultValue: [
       action === 'launch' ?
@@ -202,12 +214,24 @@ function platformAction (action, url) {
   if (options.url) {
     options.platform = options.platform.length ? options.platform : [SETTINGS.platform_default];
   }
+  options.platformsSlugs = options.platform;
+  delete options.platform;
   // if (action === 'launch') {
   //   options.url = SETTINGS.launch_url_default;
   // }
+  if ('forceUpdate' in options) {
+    options.forceupdate = options.forceUpdate;
+    delete options.forceUpdate;
+  }
+  options.forceUpdate = !utils.isTruthy(options.forceupdate) ? false : ('forceupdate' in options);
+  if (!options.sites && sites) {
+    options.sites = sites;
+  }
+  return options;
+}
 
-  options.forceupdate = !utils.isTruthy(options.forceupdate) ? false : ('forceupdate' in options);
-
+function platformAction (action, url, sites) {
+  const options = parseOptions(action, url, sites);
   const actionStr = action;
   let actionPresentStr;
   let actionPastStr;
@@ -224,16 +248,24 @@ function platformAction (action, url) {
       actionPresentStr = 'launching';
       actionPastStr = 'launched';
       break;
+    case 'test':
+      actionPresentStr = 'testing';
+      actionPastStr = 'tested';
+      break;
   }
-  const platformStr = pluralise('platform', 'platforms', options.platform.length);
-  const platformListStr = options.platform.join('", "');
+  const platformStr = pluralise('platform', 'platforms', options.platformsSlugs.length);
+  const platformListStr = options.platformsSlugs.join('", "');
   return new Promise((resolve, reject) => {
     logger.log(`${uppercaseFirstLetter(actionPresentStr)} ${platformStr} "${platformListStr}" …`);
     return commands[action].run({
-      platformsSlugs: options.platform,
-      forceUpdate: options.forceupdate,
-      url: options.url
+      platformsSlugs: options.platformsSlugs,
+      forceUpdate: options.forceUpdate,
+      url: options.url,
+      sites: options.sites
     }).then(completed => {
+      if (action === 'test') {
+        return;
+      }
       if (completed) {
         logger.log(`Successfully ${actionPastStr} ${platformStr} "${platformListStr}"`);
         process.exit(0);
@@ -258,6 +290,9 @@ switch (command) {
     break;
   case 'launch':
     launch();
+    break;
+  case 'test':
+    test();
     break;
   case 'help':
     help();
