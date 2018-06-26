@@ -38,6 +38,8 @@
   },
   "devDependencies": {
     "get-port": "^3.2.0",
-    "ngrok": "^3.0.1"
+    "internal-ip": "^3.0.1",
+    "ngrok": "^3.0.1",
+    "testcafe": "^0.20.4"
   }
 }

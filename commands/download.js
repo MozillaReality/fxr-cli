@@ -95,7 +95,7 @@ function parseTask (taskId, taskUrl, platformsSlugs = PLATFORMS_SLUGS) {
 
 function download(options) {
   options = Object.assign({}, {
-    platformsSlugs: options.platformsSlugs || [SETTINGS.default_platform],
+    platformsSlugs: options.platformsSlugs || [SETTINGS.platform_default],
     forceUpdate: options.forceUpdate,
     org: options.org || SETTINGS.github_org,
     repo: options.repo || SETTINGS.github_repo,
