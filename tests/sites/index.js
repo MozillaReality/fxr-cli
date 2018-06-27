@@ -19,15 +19,16 @@ const PAGE_LOAD_TIMEOUT = 12000;
 const SKIP_JS_ERRORS = true;
 const TEST_SRC = path.join(__dirname, 'test.js');
 
-async function run (options = {}) {
+const run = async (options = {}) => {
   options = Object.assign({}, {
     platformsSlugs: options.platformsSlugs || [SETTINGS.platform_default],
     forceUpdate: options.forceUpdate,
-    reporter: options.reporter || 'list'
+    reporter: options.reporter || SETTINGS.test_reporter,
+    port: options.port || SETTINGS.test_port
   }, options);
 
   const hostname = await internalIp.v4();
-  const port = await getPort({port: 9000});
+  const port = await getPort({port: options.port});
   let runner = null;
   let testcafe = null;
 
@@ -51,7 +52,6 @@ async function run (options = {}) {
 
       const clearTimeouts = () => {
         clearTimeout(timeoutStarted);
-        clearTimeout(timeoutRetry);
       };
 
       remoteConnection.once('ready', () => {
@@ -88,35 +88,12 @@ async function run (options = {}) {
         }
       }
 
-      function retryLaunch (err) {
-        if (connectionStarted) {
-          return clearTimeouts();
-        }
-        if (!attemptRetry) {
-          return displayError(err, 1);
-        }
-        attemptRetry = !err || err.message === 'Could not find connected device';
-        if (attemptRetry && numAttempts < MAX_ATTEMPTS) {
-          numAttempts++;
-          timeoutRetry = setTimeout(() => {
-            if (numAttempts >= MAX_ATTEMPTS) {
-              return clearTimeouts();
-            }
-            launch();
-          }, RETRY_DELAY);
-        }
-        if (numAttempts >= MAX_ATTEMPTS) {
-          return displayError(err, 1);
-        }
-      }
-
       launch().then(launched => {
-        retryLaunch();
         if (launched && (launched === true || launched.length)) {
           if (STARTED_TIMEOUT >= 0) {
             timeoutStarted = setTimeout(() => {
               if (connectionStarted) {
-                clearTimeout(timeoutStarted);
+                clearTimeouts();
                 return;
               }
               logger.log(`\t\tEnsure that your device and its WiFi are properly set up`);
@@ -124,11 +101,10 @@ async function run (options = {}) {
           }
         }
       }).catch(err => {
-        retryLaunch(err);
-        displayError(err);
+        displayError(err, 1);
       });
     });
-}
+};
 
 if (module.parent) {
   module.exports = run;
