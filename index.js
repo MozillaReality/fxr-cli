@@ -216,9 +216,6 @@ function parseOptions (action, url, sites) {
   }
   options.platformsSlugs = options.platform;
   delete options.platform;
-  // if (action === 'launch') {
-  //   options.url = SETTINGS.launch_url_default;
-  // }
   if ('forceUpdate' in options) {
     options.forceupdate = options.forceUpdate;
     delete options.forceUpdate;

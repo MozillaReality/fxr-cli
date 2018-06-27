@@ -6,6 +6,8 @@ const shell = require('shelljs');
 const SETTINGS = require('../lib/settings.js').settings;
 const utils = require('../lib/utils.js');
 
+const PATHS = SETTINGS.paths;
+
 function install (options = {}) {
   options = Object.assign({}, {
     platformsSlugs: options.platformsSlugs || [SETTINGS.platform_default],
@@ -15,7 +17,7 @@ function install (options = {}) {
   return utils.requireAdb(options.forceUpdate).then(adb => {
     return options.platformsSlugs.map(platform => {
       // TODO: Check if most recent version of the platform's APK is already installed on the device.
-      const dirPlatform = path.join(__dirname, '..', 'downloads', platform);
+      const dirPlatform = path.resolve(PATHS.downloads, platform);
       const pathApk = shell.find(path.join(dirPlatform, '*.apk'));
       if (!pathApk) {
         throw new Error(`Could not find APK for platform "${platform}"`);
