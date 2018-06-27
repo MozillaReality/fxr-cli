@@ -28,11 +28,5 @@
       "slug": "svr",
       "name": "Snapdragon VR"
     }
-  },
-  "tests_page_size_default": 10,
-  "ngrok": {
-    "enabled": true,
-    "subdomain": null,
-    "authtoken": null
   }
 }

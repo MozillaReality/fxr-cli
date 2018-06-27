@@ -93,7 +93,7 @@ function parseTask (taskId, taskUrl, platformsSlugs = PLATFORMS_SLUGS) {
     });
 }
 
-function download(options) {
+function download (options = {}) {
   options = Object.assign({}, {
     platformsSlugs: options.platformsSlugs || [SETTINGS.platform_default],
     forceUpdate: options.forceUpdate,

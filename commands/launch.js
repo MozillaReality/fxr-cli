@@ -10,7 +10,7 @@ const MAX_ATTEMPTS = 3;
 const RETRY_DELAY = 3000;  // Time to delay between attempts in milliseconds (default: 3 seconds).
 const RETRY = true;
 
-function launch (options, attempts = 0) {
+function launch (options = {}, attempts = 0) {
   options = Object.assign({}, {
     platformsSlugs: options.platformsSlugs || [SETTINGS.platform_default],
     forceUpdate: options.forceUpdate,
@@ -27,8 +27,8 @@ function launch (options, attempts = 0) {
       }
 
       const devices = shell.exec(`${adb} devices`, {silent: true});
-      console.log(devices.stdout);
       if (devices.stdout === 'List of devices attached\n\n') {
+        logger.log('\tPut on your VR headset');
         if (!RETRY || RETRY_DELAY <= 0) {
           throw new Error('Could not find connected device');
         }
@@ -36,20 +36,17 @@ function launch (options, attempts = 0) {
           if (attempts >= MAX_ATTEMPTS) {
             clearTimeout(attemptTimeout);
             attempts = 0;
-            return;
+            throw new Error('Could not find connected device');
           }
           attempts++;
           shell.exec(`${adb} kill-server`, {silent: true});
           shell.exec(`${adb} start-server`, {silent: true});
           launch(options, attempts);
-          throw new Error('Could not find connected device');
         }, RETRY_DELAY);
       } else {
         clearTimeout(attemptTimeout);
         attempts = 0;
       }
-
-      logger.log('\tPut your finger in front of the proximity sensor the Oculus Go');
 
       logger.log(`\tLaunching ${options.url}`);
       if (options.url) {
