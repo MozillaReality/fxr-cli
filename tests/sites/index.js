@@ -35,14 +35,19 @@ const run = async (options = {}) => {
     })
     .then(async (remoteConnection) => {
       const launchOptions = Object.assign({}, options, {
-        url: remoteConnection.url,
-        indent: 0
+        url: remoteConnection.url
       });
       let connectionStarted = false;
       let timeoutStarted = null;
+      let launchedTests = null;
 
-      const launchTests = (abort = false) => launch.run(launchOptions, 0, abort);
+      const launchTests = (abort = false) => {
+        return launch.run(launchOptions, 0, abort);
+      };
       const reset = () => {
+        if (launchedTests && launchedTests.abort) {
+          launchedTests.abort();
+        }
         clearTimeout(timeoutStarted);
       };
 
@@ -80,7 +85,12 @@ const run = async (options = {}) => {
         }
       }
 
-      launchTests().then(launched => {
+      launchedTests = launchTests();
+      launchedTests.then(launched => {
+        if (connectionStarted) {
+          reset();
+          return;
+        }
         if (launched && (launched === true || launched.length)) {
           if (STARTED_TIMEOUT >= 0) {
             timeoutStarted = setTimeout(() => {
