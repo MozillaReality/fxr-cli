@@ -17,7 +17,8 @@
   },
   "scripts": {
     "start": "npm run cli",
-    "cli": "node index.js"
+    "cli": "node index.js",
+    "test": "node tests/sites/index.js"
   },
   "dependencies": {
     "android-platform-tools": "^1.2.0",
