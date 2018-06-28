@@ -192,8 +192,11 @@ function test (url) {
   return platformAction('test', null);
 }
 
-function platformAction (action, url) {
-  const options = parseOptions(action, url);
+function platformAction (action, url, defaults = {}) {
+  if (!('indent' in defaults)) {
+    defaults.indent = 2;
+  }
+  const options = parseOptions(action, url, defaults);
   const actionStr = action;
   let actionPresentStr;
   let actionPastStr;

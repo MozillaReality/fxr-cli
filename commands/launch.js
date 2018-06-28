@@ -11,7 +11,27 @@ const PATHS = SETTINGS.paths;
 const RETRY_DELAY = 3000;  // Time to delay between attempts in milliseconds (default: 3 seconds).
 const RETRY = true;  // Whether to attempt to retry the launch.
 
+let forceAbort = false;
+const setForceAbort = () => {
+  forceAbort = true;
+};
+
 function launch (options = {}, attempts = 0, abort = false) {
+  let timeoutRetry = null;
+  const reset = () => {
+    clearTimeout(timeoutRetry);
+    attempts = 0;
+  };
+
+  if (forceAbort) {
+    abort = true;
+  }
+
+  if (abort) {
+    reset();
+    return;
+  }
+
   options = Object.assign({}, {
     platformsSlugs: options.platformsSlugs || [SETTINGS.platform_default],
     forceUpdate: options.forceUpdate,
@@ -20,12 +40,8 @@ function launch (options = {}, attempts = 0, abort = false) {
     indent: options.indent || ''
   }, options);
   const silent = !options.verbose;
-  let timeoutRetry = null;
-  const reset = () => {
-    clearTimeout(timeoutRetry);
-    attempts = 0;
-  };
-  return utils.requireAdb(options.forceUpdate).then(adb => {
+
+  let result = utils.requireAdb(options.forceUpdate).then(adb => {
     return options.platformsSlugs.map(platform => {
       // TODO: Check if the platform's APK is first installed on the device.
       const dirPlatform = path.resolve(PATHS.downloads, platform);
@@ -48,7 +64,7 @@ function launch (options = {}, attempts = 0, abort = false) {
           attempts++;
           shell.exec(`${adb} kill-server`, {silent});
           shell.exec(`${adb} start-server`, {silent});
-          launch(options, attempts);
+          launch(options, attempts, abort);
         }, RETRY_DELAY);
       } else {
         reset();
@@ -66,6 +82,12 @@ function launch (options = {}, attempts = 0, abort = false) {
       return platform;
     });
   });
+
+  result.abort = setForceAbort;
+
+  return result;
 }
+
+launch.abort = setForceAbort;
 
 module.exports.run = launch;
