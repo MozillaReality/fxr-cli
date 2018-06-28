@@ -29,8 +29,12 @@ function install (options = {}) {
         throw new Error('Could not find connected device');
       }
 
+      logger.log(`${options.indent}Ensure that you have enabled Developer Mode` +
+        (platform === 'oculusvr' ? ` (https://developer.oculus.com/documentation/mobilesdk/latest/concepts/mobile-device-setup-go/)` : ``));
+
       setTimeout(() => {
-        logger.log('\tPut your finger in front of the proximity sensor of your headset');
+        logger.log('${options.indent}Put your finger in front of the proximity sensor on your VR headset' +
+          (platform === 'oculusvr' ? `; then, press the volume-left (top-left) button to enter Developer Mode`));
 
         shell.exec(`${adb} uninstall org.mozilla.vrbrowser`, {silent});
         shell.exec(`${adb} install -r ${pathApk}`, {silent});
@@ -38,7 +42,7 @@ function install (options = {}) {
         if (options.url) {
           shell.exec(`${adb} shell am start -a android.intent.action.VIEW -d "${options.url}" org.mozilla.vrbrowser/.VRBrowserActivity`, {silent});
         } else {
-          logger.log('\tRun `fxr launch http://example.com/` to launch Firefox Reality');
+          logger.log('${options.indent}Run `fxr launch http://example.com/` to launch Firefox Reality');
         }
       }, 3000);
 
