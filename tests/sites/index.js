@@ -6,11 +6,12 @@ const internalIp = require('internal-ip');
 const logger = require('loggy');
 const URL = require('url').URL;
 
-const commands = require('../../commands/index.js');
+const launch = require('../../commands/launch.js');
+const parseOptions = require('../../lib/parseCli.js').parseOptions;
 const SETTINGS = require('../../lib/settings.js').settings;
 const utils = require('../../lib/utils.js');
 
-const MAX_ATTEMPTS = 3;  // Number of times to attempt to connect to the device.
+const INDENT = module.parent ? `\t\t`: ``;  // Indentation for logger messages.
 const RETRY_DELAY = 3000;  // Time to delay between attempts in milliseconds (default: 3 seconds).
 const RETRY = true;
 const STARTED_TIMEOUT = 60000;  // Time to wait until we time out because of a possible WiFi connection issue in the headset (default: 60 seconds).
@@ -20,12 +21,7 @@ const SKIP_JS_ERRORS = true;
 const TEST_SRC = path.join(__dirname, 'test.js');
 
 const run = async (options = {}) => {
-  options = Object.assign({}, {
-    platformsSlugs: options.platformsSlugs || [SETTINGS.platform_default],
-    forceUpdate: options.forceUpdate,
-    reporter: options.reporter || SETTINGS.test_reporter,
-    port: options.port || SETTINGS.test_port
-  }, options);
+  options = Object.assign({}, parseOptions('test'));
 
   const hostname = await internalIp.v4();
   const port = await getPort({port: options.port});
@@ -41,15 +37,17 @@ const run = async (options = {}) => {
       return testcafe.createBrowserConnection();
     })
     .then(async (remoteConnection) => {
-      const launchOptions = Object.assign({}, options, {url: remoteConnection.url});
+      const launchOptions = Object.assign({}, options, {
+        url: remoteConnection.url,
+        indent: 0
+      });
       let attemptRetry = RETRY && RETRY_DELAY >= 0;
       let connectionStarted = false;
       let numAttempts = 0;
       let timeoutStarted = null;
       let timeoutRetry = null;
 
-      const launch = () => commands.launch.run(launchOptions);
-
+      const launchTests = () => launch.run(launchOptions);
       const clearTimeouts = () => {
         clearTimeout(timeoutStarted);
       };
@@ -79,16 +77,16 @@ const run = async (options = {}) => {
 
       function displayError (err, exitCode) {
         if (err) {
-          logger.error(`\t\tCould not load testing entry-point URL "${launchOptions.url}":\n Error: ${err.message}`);
+          logger.error(`${INDENT}Could not load testing entry-point URL "${launchOptions.url}":\n Error: ${err.message}`);
         } else {
-          logger.error(`\t\tCould not load testing entry-point URL "${launchOptions.url}"`);
+          logger.error(`${INDENT}Could not load testing entry-point URL "${launchOptions.url}"`);
         }
         if (typeof exitCode !== 'undefined') {
           process.exit(exitCode);
         }
       }
 
-      launch().then(launched => {
+      launchTests().then(launched => {
         if (launched && (launched === true || launched.length)) {
           if (STARTED_TIMEOUT >= 0) {
             timeoutStarted = setTimeout(() => {
@@ -96,7 +94,7 @@ const run = async (options = {}) => {
                 clearTimeouts();
                 return;
               }
-              logger.log(`\t\tEnsure that your device and its WiFi are properly set up`);
+              logger.log(`${INDENT}Ensure that your device and its WiFi are properly set up`);
             }, STARTED_TIMEOUT);
           }
         }
