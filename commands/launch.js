@@ -9,19 +9,22 @@ const utils = require('../lib/utils.js');
 const MAX_ATTEMPTS = 10;  // Number of times to attempt to connect to the device.
 const PATHS = SETTINGS.paths;
 const RETRY_DELAY = 3000;  // Time to delay between attempts in milliseconds (default: 3 seconds).
-const RETRY = true;
+const RETRY = true;  // Whether to attempt to retry the launch.
 
-function launch (options = {}, attempts = 0) {
+function launch (options = {}, attempts = 0, abort = false) {
   options = Object.assign({}, {
     platformsSlugs: options.platformsSlugs || [SETTINGS.platform_default],
     forceUpdate: options.forceUpdate,
     url: options.url,
     verbose: options.verbose,
-    indent: options.indent
+    indent: options.indent || ''
   }, options);
-  options.indent = utils.getIndent(options.indent);
-  const SHOW_STDOUT = options.verbose;
-  let attemptTimeout = null;
+  const silent = !options.verbose;
+  let timeoutRetry = null;
+  const reset = () => {
+    clearTimeout(timeoutRetry);
+    attempts = 0;
+  };
   return utils.requireAdb(options.forceUpdate).then(adb => {
     return options.platformsSlugs.map(platform => {
       // TODO: Check if the platform's APK is first installed on the device.
@@ -31,34 +34,32 @@ function launch (options = {}, attempts = 0) {
         throw new Error(`Could not find APK for platform "${platform}"`);
       }
 
-      const devices = shell.exec(`${adb} devices`, {silent: !SHOW_STDOUT});
+      const devices = shell.exec(`${adb} devices`, {silent});
       if (devices.stdout === 'List of devices attached\n\n') {
         logger.log(`${options.indent}Put on your VR headset`);
         if (!RETRY || RETRY_DELAY <= 0) {
           throw new Error('Could not find connected device');
         }
-        attemptTimeout = setTimeout(() => {
+        timeoutRetry = setTimeout(() => {
           if (attempts >= MAX_ATTEMPTS) {
-            clearTimeout(attemptTimeout);
-            attempts = 0;
+            reset();
             throw new Error('Could not find connected device');
           }
           attempts++;
-          shell.exec(`${adb} kill-server`, {silent: !SHOW_STDOUT});
-          shell.exec(`${adb} start-server`, {silent: !SHOW_STDOUT});
+          shell.exec(`${adb} kill-server`, {silent});
+          shell.exec(`${adb} start-server`, {silent});
           launch(options, attempts);
         }, RETRY_DELAY);
       } else {
-        clearTimeout(attemptTimeout);
-        attempts = 0;
+        reset();
       }
 
       if (options.url) {
         logger.log(`${options.indent}Launching ${options.url} …`);
-        shell.exec(`${adb} shell am start -a android.intent.action.VIEW -d "${options.url}" org.mozilla.vrbrowser/.VRBrowserActivity`, {silent: !SHOW_STDOUT});
+        shell.exec(`${adb} shell am start -a android.intent.action.VIEW -d "${options.url}" org.mozilla.vrbrowser/.VRBrowserActivity`, {silent});
       } else {
         logger.log(`${options.indent}Launching …`);
-        shell.exec(`${adb} shell am start -n org.mozilla.vrbrowser/.VRBrowserActivity`, {silent: !SHOW_STDOUT});
+        shell.exec(`${adb} shell am start -n org.mozilla.vrbrowser/.VRBrowserActivity`, {silent});
       }
 
       // TODO: Return a Promise.

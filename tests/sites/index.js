@@ -11,9 +11,6 @@ const parseOptions = require('../../lib/parseCli.js').parseOptions;
 const SETTINGS = require('../../lib/settings.js').settings;
 const utils = require('../../lib/utils.js');
 
-const INDENT = module.parent ? `\t\t`: ``;  // Indentation for logger messages.
-const RETRY_DELAY = 3000;  // Time to delay between attempts in milliseconds (default: 3 seconds).
-const RETRY = true;
 const STARTED_TIMEOUT = 60000;  // Time to wait until we time out because of a possible WiFi connection issue in the headset (default: 60 seconds).
 // const STARTED_TIMEOUT = -1;
 const PAGE_LOAD_TIMEOUT = 12000;
@@ -41,25 +38,22 @@ const run = async (options = {}) => {
         url: remoteConnection.url,
         indent: 0
       });
-      let attemptRetry = RETRY && RETRY_DELAY >= 0;
       let connectionStarted = false;
-      let numAttempts = 0;
       let timeoutStarted = null;
-      let timeoutRetry = null;
 
-      const launchTests = () => launch.run(launchOptions);
-      const clearTimeouts = () => {
+      const launchTests = (abort = false) => launch.run(launchOptions, 0, abort);
+      const reset = () => {
         clearTimeout(timeoutStarted);
       };
 
       remoteConnection.once('ready', () => {
         connectionStarted = true;
-        clearTimeouts();
+        reset();
 
         runner
           .src(TEST_SRC)
           .browsers(remoteConnection)
-          .reporter(options.reporter)
+          .reporter(launchOptions.reporter)
           .run({
             skipJsErrors: SKIP_JS_ERRORS,
             pageLoadTimeout: PAGE_LOAD_TIMEOUT,
@@ -77,9 +71,9 @@ const run = async (options = {}) => {
 
       function displayError (err, exitCode) {
         if (err) {
-          logger.error(`${INDENT}Could not load testing entry-point URL "${launchOptions.url}":\n Error: ${err.message}`);
+          logger.error(`${launchOptions.indent}Could not load testing entry-point URL "${launchOptions.url}":\n Error: ${err.message}`);
         } else {
-          logger.error(`${INDENT}Could not load testing entry-point URL "${launchOptions.url}"`);
+          logger.error(`${launchOptions.indent}Could not load testing entry-point URL "${launchOptions.url}"`);
         }
         if (typeof exitCode !== 'undefined') {
           process.exit(exitCode);
@@ -91,10 +85,10 @@ const run = async (options = {}) => {
           if (STARTED_TIMEOUT >= 0) {
             timeoutStarted = setTimeout(() => {
               if (connectionStarted) {
-                clearTimeouts();
+                reset();
                 return;
               }
-              logger.log(`${INDENT}Ensure that your device and its WiFi are properly set up`);
+              logger.log(`${launchOptions.indent}Ensure that your device and its WiFi are properly set up`);
             }, STARTED_TIMEOUT);
           }
         }
