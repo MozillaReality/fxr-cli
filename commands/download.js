@@ -99,9 +99,8 @@ function download (options = {}) {
     forceUpdate: options.forceUpdate,
     org: options.org || SETTINGS.github_org,
     repo: options.repo || SETTINGS.github_repo,
-    indent: options.indent
+    indent: options.indent || ''
   }, options);
-  options.indent = utils.getIndent(options.indent);
   fs.emptyDirSync(PATHS.downloads);
   options.platformsSlugs.forEach(platform => fs.ensureDirSync(path.resolve(PATHS.downloads, platform)));
   const taskRepoUrl = URLS.taskcluster.repo(options.org, options.repo);
