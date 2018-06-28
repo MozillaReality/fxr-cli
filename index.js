@@ -6,18 +6,17 @@ process.on('SIGTERM', () => process.exit());
 const path = require('path');
 
 const chalk = require('chalk');
-const commandLineArgs = require('command-line-args');
 const commandLineCommands = require('command-line-commands');
 const commandLineUsage = require('command-line-usage');
 const fs = require('fs-extra');
 const logger = require('loggy');
 
 const commands = require('./commands/index.js');
+const parseOptions = require('./lib/parseCli.js').parseOptions;
 const pkgJson = require('./package.json');
 const utils = require('./lib/utils.js');
 const SETTINGS = require('./lib/settings.js').settings;
 
-const getArgvPaths = utils.getArgvPaths;
 const pluralise = utils.pluralise;
 const uppercaseFirstLetter = utils.uppercaseFirstLetter;
 
@@ -190,45 +189,11 @@ function launch (url) {
 }
 
 function test (url) {
-  const sites = require('./tests/sites/index.json').sites;
-  return platformAction('test', null, sites);
+  return platformAction('test', null);
 }
 
-function parseOptions (action, url, sites) {
-  const optionDefinitions = [
-    {name: 'platform', alias: 'p', type: String, multiple: true, defaultValue: [
-      action === 'launch' ?
-        SETTINGS.platform_default :
-        (argv[0] || SETTINGS.platform_default)
-    ]},
-    {name: 'all', alias: 'a', type: String},
-    {name: 'url', alias: 'u', type: String, defaultValue: url || argv[0]},
-    {name: 'forceupdate', alias: 'f', type: String}
-  ];
-  const options = commandLineArgs(optionDefinitions, {argv});
-  if (('all' in options) || !options.platform) {
-    options.platform = PLATFORMS_SLUGS;
-  } else {
-    options.platform = options.platform.filter(platform => platform in PLATFORMS);
-  }
-  if (options.url) {
-    options.platform = options.platform.length ? options.platform : [SETTINGS.platform_default];
-  }
-  options.platformsSlugs = options.platform;
-  delete options.platform;
-  if ('forceUpdate' in options) {
-    options.forceupdate = options.forceUpdate;
-    delete options.forceUpdate;
-  }
-  options.forceUpdate = !utils.isTruthy(options.forceupdate) ? false : ('forceupdate' in options);
-  if (!options.sites && sites) {
-    options.sites = sites;
-  }
-  return options;
-}
-
-function platformAction (action, url, sites) {
-  const options = parseOptions(action, url, sites);
+function platformAction (action, url) {
+  const options = parseOptions(action, url);
   const actionStr = action;
   let actionPresentStr;
   let actionPastStr;
@@ -257,8 +222,7 @@ function platformAction (action, url, sites) {
     return commands[action].run({
       platformsSlugs: options.platformsSlugs,
       forceUpdate: options.forceUpdate,
-      url: options.url,
-      sites: options.sites
+      url: options.url
     }).then(completed => {
       if (action === 'test') {
         return;
