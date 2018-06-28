@@ -14,6 +14,7 @@ function install (options = {}) {
     forceUpdate: options.forceUpdate,
     url: options.url
   }, options);
+  const silent = !options.verbose;
   return utils.requireAdb(options.forceUpdate).then(adb => {
     return options.platformsSlugs.map(platform => {
       // TODO: Check if most recent version of the platform's APK is already installed on the device.
@@ -23,21 +24,23 @@ function install (options = {}) {
         throw new Error(`Could not find APK for platform "${platform}"`);
       }
 
-      const devices = shell.exec(`${adb} devices`, {silent: true});
+      const devices = shell.exec(`${adb} devices`, {silent});
       if (devices.stdout === 'List of devices attached\n\n') {
         throw new Error('Could not find connected device');
       }
 
-      logger.log('\tPut your finger in front of the proximity sensor the Oculus Go');
+      setTimeout(() => {
+        logger.log('\tPut your finger in front of the proximity sensor of your headset');
 
-      shell.exec(`${adb} uninstall org.mozilla.vrbrowser`, {silent: true});
-      shell.exec(`${adb} install -r ${pathApk}`, {silent: true});
+        shell.exec(`${adb} uninstall org.mozilla.vrbrowser`, {silent});
+        shell.exec(`${adb} install -r ${pathApk}`, {silent});
 
-      if (options.url) {
-        shell.exec(`${adb} shell am start -a android.intent.action.VIEW -d "${options.url}" org.mozilla.vrbrowser/.VRBrowserActivity`, {silent: true});
-      } else {
-        logger.log('\tRun `fxr launch http://example.com/` to launch Firefox Reality');
-      }
+        if (options.url) {
+          shell.exec(`${adb} shell am start -a android.intent.action.VIEW -d "${options.url}" org.mozilla.vrbrowser/.VRBrowserActivity`, {silent});
+        } else {
+          logger.log('\tRun `fxr launch http://example.com/` to launch Firefox Reality');
+        }
+      }, 3000);
 
       return platform;
     });
