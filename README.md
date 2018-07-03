@@ -32,13 +32,13 @@ fxr help
     npm install -g fxr
     ```
 
-4. To download (but not yet install) the latest version of the [Firefox Reality](https://github.com/MozillaReality/FirefoxReality) browser:
+5. To download (but not yet install) the latest version of the [Firefox Reality](https://github.com/MozillaReality/FirefoxReality) browser:
 
     ```sh
     fxr download
     ```
 
-5. Now that we have the latest version downloaded, we can install the [Firefox Reality](https://github.com/MozillaReality/FirefoxReality) browser on the VR headset.
+6. Now that we have the latest version downloaded, we can install the [Firefox Reality](https://github.com/MozillaReality/FirefoxReality) browser on the VR headset.
 
     💡 **TIP:** Put your finger in front of the proximity sensor on the Oculus Go headset. Then, press the volume-left (top-left) button to enter `Developer Mode`.
 
@@ -48,7 +48,7 @@ fxr help
     fxr install
     ```
 
-5. To launch a URL in the browser, run this command in your terminal:
+7. To launch a URL in the browser, run this command in your terminal:
 
     ```sh
     fxr launch http://example.com/
