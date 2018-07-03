@@ -2,9 +2,11 @@
 .DS_Store
 .public/
 .sw[ponm]
+.tgz
 *.log
 /downloads/
 gh-pages
 node_modules/
+package
 public/
 tmp/
