@@ -19,6 +19,8 @@
     "start": "npm run cli",
     "cli": "node index.js",
     "test": "node tests/sites/index.js",
+    "prepublish": "git stash && git checkout master && git pull && npm version patch",
+    "publish": "node scripts/release.js",
     "publish-please": "publish-please",
     "publish-please-guard": "publish-please guard"
   },
