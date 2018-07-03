@@ -1,7 +1,7 @@
-const release = require('../scripts/release.js');
+const releaseScript = require('../scripts/release.js');
 
 function release () {
-  const result = release();
+  const result = releaseScript();
   process.exit(result.status);
 }
 

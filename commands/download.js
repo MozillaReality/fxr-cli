@@ -10,8 +10,6 @@ const SETTINGS = require('../lib/settings.js').settings;
 const getPlatform = utils.getPlatform;
 
 const PATHS = SETTINGS.paths;
-const PLATFORMS = SETTINGS.platforms;
-const PLATFORMS_SLUGS = SETTINGS.platformsSlugs;
 
 const URLS = {
   taskcluster: {
@@ -25,7 +23,7 @@ function getTaskIdFromUri (uri) {
   return uri.split('#/')[1];
 }
 
-function parseTask (taskId, taskUrl, platformsSlugs = PLATFORMS_SLUGS) {
+function parseTask (taskId, taskUrl, options = {}) {
   let artifacts = [];
   function saveDownloadsIndex () {
     const data = {
@@ -47,7 +45,7 @@ function parseTask (taskId, taskUrl, platformsSlugs = PLATFORMS_SLUGS) {
         artifact.url = URLS.taskcluster.artifact(taskId, artifact.name);
         artifact.basename = path.basename(artifact.name);
         artifact.platform = artifact.storageType === 'reference' ? null : getPlatform(artifact.basename);
-        artifact.status = artifact.platform && platformsSlugs.includes(artifact.platform.slug) ? 'queued' : 'skipped';
+        artifact.status = artifact.platform && options.platformsSlugs.includes(artifact.platform.slug) ? 'queued' : 'skipped';
         return artifact;
       });
       saveDownloadsIndex();
@@ -112,7 +110,7 @@ function download (options = {}) {
         taskUrl
       };
     })
-    .then(({taskId, taskUrl}) => parseTask(taskId, taskUrl, options.platformsSlugs));
+    .then(({taskId, taskUrl}) => parseTask(taskId, taskUrl, options));
 }
 
 module.exports.run = download;

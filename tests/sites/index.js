@@ -4,18 +4,17 @@ const createTestCafe = require('testcafe');
 const getPort = require('get-port');
 const internalIp = require('internal-ip');
 const logger = require('loggy');
-const URL = require('url').URL;
 
 const launch = require('../../commands/launch.js');
 const parseOptions = require('../../lib/parseCli.js').parseOptions;
-const SETTINGS = require('../../lib/settings.js').settings;
-const utils = require('../../lib/utils.js');
 
-const STARTED_TIMEOUT = 60000;  // Time to wait until we time out because of a possible WiFi connection issue in the headset (default: 60 seconds).
-// const STARTED_TIMEOUT = -1;
-const PAGE_LOAD_TIMEOUT = 12000;
-const SKIP_JS_ERRORS = true;
+const STARTED_TIMEOUT = 60000; // Time to wait until we time out because of a possible WiFi connection issue in the headset (default: 60 seconds; disable: -1).
 const TEST_SRC = path.join(__dirname, 'test.js');
+const TESTCAFE_OPTIONS = {
+  debugMode: true,
+  pageLoadTimeout: 12000, // Time to wait until the test runner marks a site as `FAIL` (default: 12 seconds).
+  skipJsErrors: true
+};
 
 const run = async (options = {}) => {
   options = Object.assign({}, parseOptions('test'));
@@ -59,11 +58,7 @@ const run = async (options = {}) => {
           .src(TEST_SRC)
           .browsers(remoteConnection)
           .reporter(launchOptions.reporter)
-          .run({
-            skipJsErrors: SKIP_JS_ERRORS,
-            pageLoadTimeout: PAGE_LOAD_TIMEOUT,
-            debugMode: true
-          })
+          .run(TESTCAFE_OPTIONS)
           .then(failedCount => {
             testcafe.close();
             process.exit(failedCount ? 1 : 0);

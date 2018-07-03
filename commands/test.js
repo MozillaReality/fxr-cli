@@ -1,5 +1,3 @@
-const path = require('path');
-
 function test (options) {
   return require('../tests/sites/index.js')(options);
 }

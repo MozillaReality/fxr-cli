@@ -33,7 +33,7 @@ function install (options = {}) {
         (platform === 'oculusvr' ? ` (https://developer.oculus.com/documentation/mobilesdk/latest/concepts/mobile-device-setup-go/)` : ``));
 
       setTimeout(() => {
-        logger.log('${options.indent}Put your finger in front of the proximity sensor on your VR headset' +
+        logger.log(`${options.indent}Put your finger in front of the proximity sensor on your VR headset` +
           (platform === 'oculusvr' ? `; then, press the volume-left (top-left) button to enter Developer Mode` : ``));
 
         shell.exec(`${adb} uninstall org.mozilla.vrbrowser`, {silent});
@@ -42,7 +42,8 @@ function install (options = {}) {
         if (options.url) {
           shell.exec(`${adb} shell am start -a android.intent.action.VIEW -d "${options.url}" org.mozilla.vrbrowser/.VRBrowserActivity`, {silent});
         } else {
-          logger.log('${options.indent}Run `fxr launch http://example.com/` to launch Firefox Reality');
+          shell.exec(`${adb} shell am start -n org.mozilla.vrbrowser/.VRBrowserActivity`, {silent});
+          logger.log(`${options.indent}Run \`fxr launch http://example.com/\` to launch a site in Firefox Reality`);
         }
       }, 3000);
 
