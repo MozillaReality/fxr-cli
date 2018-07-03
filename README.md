@@ -1,7 +1,6 @@
 # `fxr` – CLI tool for Firefox Reality
 
-A command-line tool for installing and automating [Firefox Reality](https://github.com/MozillaReality/FirefoxReality).
-
+A command-line tool for installing and automating the [Firefox Reality](https://github.com/MozillaReality/FirefoxReality) virtual-reality browser.
 
 ## Usage
 

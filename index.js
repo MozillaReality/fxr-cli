@@ -5,7 +5,6 @@ process.on('SIGTERM', () => process.exit());
 
 const path = require('path');
 
-const chalk = require('chalk');
 const commandLineCommands = require('command-line-commands');
 const commandLineUsage = require('command-line-usage');
 const fs = require('fs-extra');
@@ -15,13 +14,9 @@ const commands = require('./commands/index.js');
 const parseOptions = require('./lib/parseCli.js').parseOptions;
 const pkgJson = require('./package.json');
 const utils = require('./lib/utils.js');
-const SETTINGS = require('./lib/settings.js').settings;
 
 const pluralise = utils.pluralise;
 const uppercaseFirstLetter = utils.uppercaseFirstLetter;
-
-const PLATFORMS = SETTINGS.platforms;
-const PLATFORMS_SLUGS = SETTINGS.platformsSlugs;
 
 const validCommands = [null, 'download', 'install', 'launch', 'test', 'version', 'help'];
 
@@ -132,7 +127,7 @@ function help () {
       },
       {
         header: binName,
-        content: `${binStr} is a command-line tool for installing and automating Firefox Reality.`
+        content: `${binStr} is a command-line tool for installing and automating the Firefox Reality virtual-reality browser.`
       },
       {
         header: 'Usage',
@@ -144,7 +139,7 @@ function help () {
           {name: cmd('install'), summary: 'Install Firefox Reality to your device.'},
           {name: cmd('launch'), summary: 'Launch a URL in Firefox Reality.'},
           {name: cmd('version'), summary: 'Output the version number.'},
-          {name: cmd('help'), summary: 'Output the usage information.'},
+          {name: cmd('help'), summary: 'Output the usage information.'}
         ]
       },
       {
@@ -152,15 +147,15 @@ function help () {
         content: [
           {
             desc: bullet('examples', 'Install Firefox Reality to your device.'),
-            example: `$ ${binStr} ${cmd('install')}`,
+            example: `$ ${binStr} ${cmd('install')}`
           },
           {
             desc: bullet('examples', 'Launch a URL in Firefox Reality.'),
-            example: `$ ${binStr} ${cmd('launch')} http://example.com/`,
+            example: `$ ${binStr} ${cmd('launch')} http://example.com/`
           },
           {
             desc: bullet('examples', 'Launch a local project in Firefox Reality.'),
-            example: `$ ${binStr} ${cmd('launch')} path/to/project/`,
+            example: `$ ${binStr} ${cmd('launch')} path/to/project/`
           }
         ]
       },

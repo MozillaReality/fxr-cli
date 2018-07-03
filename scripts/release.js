@@ -1,18 +1,24 @@
 const spawn = require('child_process').spawnSync;
 
-const chalk = require('chalk');
+const spawnSync = (arg0, args) => spawn.sync(arg0, args, {stdio: 'inherit'});
 
-const spawnSyncOptions = {stdio: 'inherit'};
-
-const build = () => spawn.sync('npm', ['run', 'build'], spawnSyncOptions);
-const push = () => spawn.sync('git', ['push', 'origin', 'master'], spawnSyncOptions);
+const stash = () => spawnSync('git', ['stash']);
+const stashApply = () => spawnSync('git', ['stash', 'apply']);
+const checkout = () => spawnSync('git', ['checkout', 'master']);
+const push = () => spawnSync('git', ['push', 'origin', 'master']);
 
 const release = () => {
+  const chalk = require('chalk');
   process.env.CI = true;
 
-  const buildResult = build();
-  if (buildResult.status !== 0) {
-    process.exit(buildResult.status);
+  const stashResult = stash();
+  if (stashResult.status !== 0) {
+    process.exit(stashResult.status);
+  }
+
+  const checkoutResult = checkout();
+  if (checkoutResult.status !== 0) {
+    process.exit(checkoutResult.status);
   }
 
   console.log(chalk.green('Starting the release 🚀'));
@@ -20,9 +26,7 @@ const release = () => {
   const releaseResult = spawn.sync(
     require.resolve('publish-please/bin/publish-please'),
     [],
-    {
-      stdio: 'inherit'
-    }
+    {stdio: 'inherit'}
   );
 
   if (releaseResult.status === 0) {
@@ -31,7 +35,16 @@ const release = () => {
     console.log('Done 🎉');
   }
 
+  const stashApplyResult = stashApply();
+  if (stashApplyResult.status !== 0) {
+    process.exit(stashApplyResult.status);
+  }
+
   return releaseResult;
 };
 
-module.exports = release;
+if (module.parent) {
+  module.exports.run = release;
+} else {
+  release();
+}
