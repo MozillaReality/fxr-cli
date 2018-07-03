@@ -29,5 +29,6 @@
     }
   },
   "test_port": 8888,
-  "test_reporter": "list"
+  "test_reporter": "list",
+  "sites_url": "https://github.com/MozillaReality/fxr-cli/blob/master/tests/sites/index.json"
 }

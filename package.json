@@ -13,7 +13,8 @@
   "repository": "https://github.com/MozillaReality/fxr-cli.git",
   "homepage": "https://github.com/MozillaReality/fxr-cli",
   "bugs": {
-    "url": "https://github.com/MozillaReality/fxr-cli/issues"
+    "url": "https://github.com/MozillaReality/fxr-cli/issues",
+    "submit_url": "https://github.com/MozillaReality/fxr-cli/issues/new"
   },
   "scripts": {
     "start": "npm run cli",
