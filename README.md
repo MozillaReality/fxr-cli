@@ -4,10 +4,55 @@ A command-line tool for installing and automating the [Firefox Reality](https://
 
 ## Usage
 
+On your PC machine, first ensure [Node.js](https://nodejs.org/en/download/) is installed.
+
+To install the `fxr` tool on your machine, run this in your command-line terminal (e.g., _Terminal_ in `Applications > Utilities` on macOS):
+
 ```sh
 npm install -g fxr
 fxr
 ```
+
+To see all the various options with example commands, run any of these commands:
+
+```sh
+fxr --help
+fxr help
+```
+
+
+## First-time experience for the _Oculus Go_ VR headset
+
+1. Ensure your headset has the Oculus mobile-companion app installed. Go to **https://www.oculus.com/setup/** from your [iOS](https://itunes.apple.com/us/app/oculus-vr/id1366478176) or [Android](https://play.google.com/store/apps/details?id=com.oculus.twilight) device.
+2. Enable [`Developer Mode`](https://developer.oculus.com/documentation/mobilesdk/latest/concepts/mobile-device-setup-go/) in the Oculus mobile-companion app: `Settings > Oculus Go (• Connected) > More Settings > Developer Mode > Developer mode`
+3. On your PC machine, ensure [Node.js](https://nodejs.org/en/download/) is installed.
+4. Run this in your command-line terminal (e.g., _Terminal_ in `Applications > Utilities` on macOS):
+
+    ```sh
+    npm install -g fxr
+    ```
+
+4. To download (but not yet install) the latest version of the [Firefox Reality](https://github.com/MozillaReality/FirefoxReality) browser:
+
+    ```sh
+    fxr download
+    ```
+
+5. Now that we have the latest version downloaded, we can install the [Firefox Reality](https://github.com/MozillaReality/FirefoxReality) browser on the VR headset.
+
+    💡 **TIP:** Put your finger in front of the proximity sensor on the Oculus Go headset. Then, press the volume-left (top-left) button to enter `Developer Mode`.
+
+    Run this command in your terminal:
+
+    ```sh
+    fxr install
+    ```
+
+5. To launch a URL in the browser, run this command in your terminal:
+
+    ```sh
+    fxr launch http://example.com/
+    ```
 
 
 ## Commands
@@ -38,7 +83,7 @@ To work on improving the `fxr` CLI in this repository, first ensure you've set u
     cd fxr-cli
     ```
 
-2. Install the [Node](https://nodejs.org/en/download/) dependencies:
+2. Install the [Node.js](https://nodejs.org/en/download/) dependencies:
 
     ```sh
     npm install
