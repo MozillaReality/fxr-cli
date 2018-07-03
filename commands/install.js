@@ -34,7 +34,7 @@ function install (options = {}) {
 
       setTimeout(() => {
         logger.log('${options.indent}Put your finger in front of the proximity sensor on your VR headset' +
-          (platform === 'oculusvr' ? `; then, press the volume-left (top-left) button to enter Developer Mode`));
+          (platform === 'oculusvr' ? `; then, press the volume-left (top-left) button to enter Developer Mode` : ``));
 
         shell.exec(`${adb} uninstall org.mozilla.vrbrowser`, {silent});
         shell.exec(`${adb} install -r ${pathApk}`, {silent});
