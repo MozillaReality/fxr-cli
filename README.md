@@ -52,6 +52,19 @@ To work on improving the `fxr` CLI in this repository, first ensure you've set u
     ```
 
 
+## Maintaining this project
+
+To freeze `master` at a new version, run these commands:
+
+```sh
+git stash
+git checkout master
+git pull
+npm version patch
+git push --tags
+npm run publish-please
+```
+
 ## License
 
 ```
