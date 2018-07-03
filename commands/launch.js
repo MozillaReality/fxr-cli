@@ -6,10 +6,10 @@ const shell = require('shelljs');
 const SETTINGS = require('../lib/settings.js').settings;
 const utils = require('../lib/utils.js');
 
-const MAX_ATTEMPTS = 10;  // Number of times to attempt to connect to the device.
+const MAX_ATTEMPTS = 10; // Number of times to attempt to connect to the device.
 const PATHS = SETTINGS.paths;
-const RETRY_DELAY = 3000;  // Time to delay between attempts in milliseconds (default: 3 seconds).
-const RETRY = true;  // Whether to attempt to retry the launch.
+const RETRY_DELAY = 3000; // Time to delay between attempts in milliseconds (default: 3 seconds).
+const RETRY = true; // Whether to attempt to retry the launch.
 
 let forceAbort = false;
 const setForceAbort = () => {
