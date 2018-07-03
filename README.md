@@ -1,6 +1,6 @@
 # `fxr` – CLI tool for Firefox Reality
 
-A command-line tool for installing and automating the [Firefox Reality](https://github.com/MozillaReality/FirefoxReality) virtual-reality browser.
+A command-line tool for installing and automating the [Firefox Reality][firefox-reality] virtual-reality browser.
 
 ## Usage
 
@@ -13,12 +13,7 @@ npm install -g fxr
 fxr
 ```
 
-To see all the various options with example commands, run any of these commands:
 
-```sh
-fxr --help
-fxr help
-```
 
 
 ## First-time experience for the _Oculus Go_ VR headset
@@ -32,13 +27,13 @@ fxr help
     npm install -g fxr
     ```
 
-5. To download (but not yet install) the latest version of the [Firefox Reality](https://github.com/MozillaReality/FirefoxReality) browser:
+5. To download (but not yet install) the latest version of the [Firefox Reality][firefox-reality] browser:
 
     ```sh
     fxr download
     ```
 
-6. Now that we have the latest version downloaded, we can install the [Firefox Reality](https://github.com/MozillaReality/FirefoxReality) browser on the VR headset.
+6. Now that we have the latest version downloaded, we can install the [Firefox Reality][firefox-reality] browser on the VR headset.
 
     💡 **TIP:** Put your finger in front of the proximity sensor on the Oculus Go headset. Then, press the volume-left (top-left) button to enter `Developer Mode`.
 
@@ -57,7 +52,7 @@ fxr help
 
 ## Commands
 
-To get a list of all commands and options:
+To display a list of all commands and options:
 
 ```sh
 fxr --help
@@ -65,7 +60,15 @@ fxr --help
 
 #### `fxr launch <url> [options]`
 
-To launch a URL in Firefox Reality:
+#### `fxr launch <url> [options]`
+
+To launch Firefox Reality:
+
+```sh
+fxr launch
+```
+
+To launch a URL (e.g., http://example.com/) in Firefox Reality:
 
 ```sh
 fxr launch http://example.com/
@@ -121,3 +124,5 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ```
+
+[firefox-reality]: https://github.com/MozillaReality/FirefoxReality

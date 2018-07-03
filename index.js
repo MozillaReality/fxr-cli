@@ -3,6 +3,8 @@ process.on('unhandledRejection', err => { throw err; });
 process.on('SIGINT', () => process.exit());
 process.on('SIGTERM', () => process.exit());
 
+const pkgJson = require('./package.json');
+
 const path = require('path');
 
 const commandLineCommands = require('command-line-commands');
@@ -12,9 +14,14 @@ const logger = require('loggy');
 
 const commands = require('./commands/index.js');
 const parseOptions = require('./lib/parseCli.js').parseOptions;
-const pkgJson = require('./package.json');
+const SETTINGS = require('./lib/settings.js').settings;
 const utils = require('./lib/utils.js');
 
+const SITES_URL = SETTINGS.sites_url;
+const PLATFORMS_SLUGS = SETTINGS.platformsSlugs;
+
+const parseBugsFromPkg = utils.parseBugsFromPkg;
+const parseLicenseFromPkg = utils.parseLicenseFromPkg;
 const pluralise = utils.pluralise;
 const uppercaseFirstLetter = utils.uppercaseFirstLetter;
 
@@ -78,7 +85,9 @@ function getHeaderLogo () {
 }
 
 function help () {
-  const binName = pkgJson.libraryName || pkgJson.productName || Object.keys(pkgJson.bin)[0];
+  const binName = pkgJson.libraryName || pkgJson.productName ||
+    (typeof pkgJson.bin === 'object' ? Object.keys(pkgJson.bin)[0] : pkgJson.name);
+
   const binStr = `[bold]{[cyan]{${binName}}}`;
 
   let logoContent = '';
@@ -87,17 +96,21 @@ function help () {
   };
 
   let links = [];
-
   if (pkgJson.homepage) {
     links.push({name: 'Project homepage', summary: link(pkgJson.homepage)});
   }
-
-  if (typeof pkgJson.bugs === 'string') {
-    pkgJson.bugs = {url: pkgJson.bugs};
+  let {bugsListUrl, bugsSubmitUrl} = parseBugsFromPkg(pkgJson);
+  if (bugsListUrl) {
+    links.push({name: 'List of issues', summary: link(bugsListUrl)});
   }
-
-  if (pkgJson.bugs && pkgJson.bugs.url) {
-    links.push({name: 'File an issue', summary: link(pkgJson.bugs.url)});
+  if (bugsSubmitUrl) {
+    links.push({name: 'File an issue', summary: link(bugsSubmitUrl)});
+  }
+  let {licenseType, licenseUrl} = parseLicenseFromPkg(pkgJson);
+  if (licenseType) {
+    links.push({name: 'Open-Source Software license', summary: `${licenseType} (${link(licenseUrl)})`});
+  } else {
+    links.push({name: 'Open-Source Software license', summary: link(licenseUrl)});
   }
 
   return getHeaderLogo().then(content => {
@@ -113,6 +126,10 @@ function help () {
 
   function bullet (type, str) {
     return `${++bulletCounters[type]}. ${str}`;
+  }
+
+  function bulletExamples (str) {
+    return bullet('examples', str);
   }
 
   function cmd (cmdName) {
@@ -136,6 +153,7 @@ function help () {
       {
         header: 'Commands',
         content: [
+          {name: cmd('download'), summary: 'Download Firefox Reality to your PC.'},
           {name: cmd('install'), summary: 'Install Firefox Reality to your device.'},
           {name: cmd('launch'), summary: 'Launch a URL in Firefox Reality.'},
           {name: cmd('version'), summary: 'Output the version number.'},
@@ -146,16 +164,41 @@ function help () {
         header: 'Examples',
         content: [
           {
-            desc: bullet('examples', 'Install Firefox Reality to your device.'),
+            desc: bulletExamples('Download latest Oculus Go-compatible Firefox Reality to your PC.'),
+            example: `$ ${binStr} ${cmd('download')}`
+          },
+          {
+            desc: bulletExamples('Download latest Google Daydream-compatible Firefox Reality to your PC.'),
+            example: `$ ${binStr} ${cmd('install')} daydream`
+          },
+          {
+            desc: bulletExamples(
+              `Download all platforms (${PLATFORMS_SLUGS.join('", "')}) for Firefox Reality to your PC.`),
+            example: `$ ${binStr} ${cmd('install')} daydream`
+          },
+          {
+            desc: bulletExamples('Install the downloaded Firefox Reality to your Oculus Go VR device.'),
             example: `$ ${binStr} ${cmd('install')}`
           },
           {
-            desc: bullet('examples', 'Launch a URL in Firefox Reality.'),
-            example: `$ ${binStr} ${cmd('launch')} http://example.com/`
+            desc: bulletExamples('Launch Firefox Reality.'),
+            example: `$ ${binStr} ${cmd('launch')}`
           },
           {
-            desc: bullet('examples', 'Launch a local project in Firefox Reality.'),
-            example: `$ ${binStr} ${cmd('launch')} path/to/project/`
+            desc: bulletExamples('Launch a URL in Firefox Reality.'),
+            example: `$ ${binStr} ${cmd('launch')} ${link('http://example.com/')}`
+          },
+          {
+            desc: bulletExamples(`Run automated test suite for Firefox Reality (list of sites: ${SITES_URL}).`),
+            example: `$ ${binStr} ${cmd('test')}`
+          },
+          {
+            desc: bulletExamples('Output the version number.'),
+            example: `$ ${binStr} ${cmd('version')}`
+          },
+          {
+            desc: bulletExamples('Display a list of all commands and options.'),
+            example: `$ ${binStr} ${cmd('help')}`
           }
         ]
       },
