@@ -1,11 +1,11 @@
-const spawn = require('child_process').spawnSync;
+const spawnSync = require('child_process').spawnSync;
 
-const spawnSync = (arg0, args) => spawn.sync(arg0, args, {stdio: 'inherit'});
+const exec = (arg0, args) => spawnSync(arg0, args, {stdio: 'inherit'});
 
-const stash = () => spawnSync('git', ['stash']);
-const stashApply = () => spawnSync('git', ['stash', 'apply']);
-const checkout = () => spawnSync('git', ['checkout', 'master']);
-const push = () => spawnSync('git', ['push', 'origin', 'master']);
+const stash = () => exec('git', ['stash']);
+const stashApply = () => exec('git', ['stash', 'apply']);
+const checkout = () => exec('git', ['checkout', 'master']);
+const push = () => exec('git', ['push', 'origin', 'master']);
 
 const release = () => {
   const chalk = require('chalk');
@@ -23,7 +23,7 @@ const release = () => {
 
   console.log(chalk.green('Starting the release 🚀'));
   console.log();
-  const releaseResult = spawn.sync(
+  const releaseResult = spawnSync(
     require.resolve('publish-please/bin/publish-please'),
     [],
     {stdio: 'inherit'}

@@ -13,6 +13,7 @@ const logger = require('loggy');
 const commands = require('./commands/index.js');
 const parseOptions = require('./lib/parseCli.js').parseOptions;
 const pkgJson = require('./package.json');
+const SETTINGS = require('./lib/settings.js').settings;
 const utils = require('./lib/utils.js');
 
 const pluralise = utils.pluralise;
@@ -78,8 +79,9 @@ function getHeaderLogo () {
 }
 
 function help () {
+  const chalk = require('chalk');
   const binName = pkgJson.libraryName || pkgJson.productName || Object.keys(pkgJson.bin)[0];
-  const binStr = `[bold]{[cyan]{${binName}}}`;
+  const binStr = chalk.cyan.bold(binName);
 
   let logoContent = '';
   let bulletCounters = {
@@ -108,7 +110,7 @@ function help () {
   });
 
   function link (url) {
-    return `[underline]{${url}}`;
+    return chalk.underline(url);
   }
 
   function bullet (type, str) {
@@ -116,10 +118,12 @@ function help () {
   }
 
   function cmd (cmdName) {
-    return `[magenta]{${cmdName}}`;
+    return chalk.magenta(cmdName);
   }
 
   function displayUsage () {
+    const chalk = require('chalk');
+
     const sections = [
       {
         content: logoContent,
@@ -131,7 +135,7 @@ function help () {
       },
       {
         header: 'Usage',
-        content: `$ ${binStr} ${cmd('<command>')} [blue]{[options]}`
+        content: `$ ${binStr} ${cmd('<command>')} ${chalk.blue('[options]')}`
       },
       {
         header: 'Commands',
@@ -220,7 +224,10 @@ function platformAction (action, url, defaults = {}) {
     return commands[action].run({
       platformsSlugs: options.platformsSlugs,
       forceUpdate: options.forceUpdate,
-      url: options.url
+      url: options.url,
+      org: options.org || SETTINGS.github_org,
+      repo: options.repo || SETTINGS.github_repo,
+      indent: options.indent || ''
     }).then(completed => {
       if (action === 'test') {
         return;
