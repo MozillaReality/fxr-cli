@@ -73,7 +73,7 @@ function parseTask (taskId, taskUrl, options = {}) {
             destStream.on('finish', () => {
               artifact.status = 'downloaded';
               artifact.downloaded = new Date().toJSON();
-              logger.log(`${options.indent}Successfully downloaded "${artifact.platform.slug}" package`);
+              logger.log(`${options.indent}Successfully downloaded "${artifact.platform.slug}" package (${taskUrl})`);
               saveDownloadsIndex();
               resolve(artifact);
             });
