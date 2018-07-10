@@ -4,7 +4,7 @@
   "libraryName": "fxr",
   "description": "A command-line tool for installing and automating the Firefox Reality virtual-reality browser.",
   "author": "fxr authors",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "main": "index.js",
   "bin": {
     "fxr": "index.js"
@@ -21,8 +21,8 @@
     "test": "node tests/sites/index.js",
     "lint": "semistandard -v | snazzy",
     "lint:fix": "semistandard --fix",
-    "prepublish": "git stash && git checkout master && git pull && npm version patch",
-    "publish": "node scripts/release.js",
+    "prepublish-release": "git stash && git checkout master && git pull && npm version patch",
+    "publish-release": "node scripts/release.js",
     "publish-please": "publish-please",
     "publish-please-guard": "publish-please guard"
   },
