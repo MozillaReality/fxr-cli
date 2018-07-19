@@ -1,4 +1,15 @@
 #!/usr/bin/env node
+
+const AutoUpdate = require('cli-autoupdate');
+
+const pkgJson = require('./package.json');
+
+const update = new AutoUpdate(pkgJson);
+
+update.on('error', (e) => { console.log(e); run(); });
+update.on('update', () => {});
+update.on('finish', () => run);
+
 process.on('unhandledRejection', err => { throw err; });
 process.on('SIGINT', () => process.exit());
 process.on('SIGTERM', () => process.exit());
@@ -12,7 +23,6 @@ const logger = require('loggy');
 
 const commands = require('./commands/index.js');
 const parseOptions = require('./lib/parseCli.js').parseOptions;
-const pkgJson = require('./package.json');
 const SETTINGS = require('./lib/settings.js').settings;
 const utils = require('./lib/utils.js');
 
@@ -247,32 +257,34 @@ function platformAction (action, url, defaults = {}) {
   });
 }
 
-switch (command) {
-  case 'download':
-    download();
-    break;
-  case 'install':
-    install();
-    break;
-  case 'launch':
-    launch();
-    break;
-  case 'test':
-    test();
-    break;
-  case 'help':
-    help();
-    break;
-  case 'version':
-    version();
-    break;
-  default:
-    if (argv.includes('-v') ||
-        argv.includes('--v') ||
-        argv.includes('--version')) {
+function run () {
+  switch (command) {
+    case 'download':
+      download();
+      break;
+    case 'install':
+      install();
+      break;
+    case 'launch':
+      launch();
+      break;
+    case 'test':
+      test();
+      break;
+    case 'help':
+      help();
+      break;
+    case 'version':
       version();
       break;
-    }
-    help();
-    break;
+    default:
+      if (argv.includes('-v') ||
+          argv.includes('--v') ||
+          argv.includes('--version')) {
+        version();
+        break;
+      }
+      help();
+      break;
+  }
 }
