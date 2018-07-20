@@ -10,6 +10,8 @@ const commandLineUsage = require('command-line-usage');
 const fs = require('fs-extra');
 const logger = require('loggy');
 
+process.on('exit', () => process.exit(logger.errorHappened ? 1 : 0));
+
 const commands = require('./commands/index.js');
 const parseOptions = require('./lib/parseCli.js').parseOptions;
 const pkgJson = require('./package.json');
@@ -225,9 +227,11 @@ function platformAction (action, url, defaults = {}) {
   const platformStr = pluralise('platform', 'platforms', options.platformsSlugs.length);
   const platformListStr = options.platformsSlugs.join('", "');
   return new Promise((resolve, reject) => {
+    const loggerPlatform = (str, level) => utils.loggerPlatform(platform, str, level);
     if (displayLogBefore) {
-      logger.log(`${uppercaseFirstLetter(actionPresentStr)} ${platformStr} "${platformListStr}" …`);
+      loggerPlatform(uppercaseFirstLetter(actionPresentStr));
     }
+
     return commands[action].run({
       platformsSlugs: options.platformsSlugs,
       forceUpdate: options.forceUpdate,
@@ -241,15 +245,15 @@ function platformAction (action, url, defaults = {}) {
       }
       if (completed) {
         if (displayLogAfter) {
-          logger.log(`Successfully ${actionPastStr} ${platformStr} "${platformListStr}"`);
+          loggerPlatform(uppercaseFirstLetter(actionPastStr));
         }
       }
     }).catch(err => {
       if (displayError) {
         if (err) {
-          logger.error(`Could not ${actionStr} ${platformStr} "${platformListStr}":`, err);
+          loggerPlatform(`Could not ${actionStr}: ${err}`, 'error');
         } else {
-          logger.error(`Could not ${actionStr} ${platformStr} "${platformListStr}"`);
+          loggerPlatform(`Could not ${actionStr}`, 'error');
         }
       } else {
         throw err;

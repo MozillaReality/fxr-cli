@@ -17,6 +17,8 @@ function install (options = {}) {
   const silent = !options.verbose;
   return utils.requireAdb(options.forceUpdate).then(adb => {
     return options.platformsSlugs.map(platform => {
+      const loggerPlatform = (str, level) => utils.loggerPlatform(platform, str, level);
+
       // TODO: Check if most recent version of the platform's APK is already installed on the device.
       const dirPlatform = path.resolve(PATHS.downloads, platform);
       const pathApk = shell.find(path.join(dirPlatform, '*.apk'));

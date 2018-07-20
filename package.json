@@ -1,6 +1,6 @@
 {
   "name": "fxr",
-  "productName": "fxr",
+  "productName": "Firefox Reality",
   "libraryName": "fxr",
   "description": "A command-line tool for installing and automating the Firefox Reality virtual-reality browser.",
   "author": "fxr authors",
