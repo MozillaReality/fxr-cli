@@ -43,8 +43,6 @@ function launch (options = {}, attempts = 0, abort = false) {
 
   const silent = !options.verbose;
 
-  const stdio = silent ? 'ignore' : 'inherit';
-
   let result = new Promise(async (resolve, reject) => {
     const adb = await utils.requireAdb(options.forceUpdate);
 
@@ -86,7 +84,7 @@ function launch (options = {}, attempts = 0, abort = false) {
     }
 
     let errMsg;
-    let launchedObjStr = options.url ? chalk.bold.underline(options.url) : pkgJson.productName;
+    let launchedObjStr = options.url ? chalk.bold.underline(options.url) : chalk.bold(pkgJson.productName);
     if (cmd.stderr && cmd.stderr.startsWith('Error')) {
       errMsg = `Could not launch ${launchedObjStr}`;
       loggerPlatform(errMsg, 'error');

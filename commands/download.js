@@ -1,9 +1,11 @@
 const path = require('path');
 
+const chalk = require('chalk');
 const fetch = require('node-fetch');
 const fs = require('fs-extra');
 const logger = require('loggy');
 
+const pkgJson = require('../package.json');
 const utils = require('../lib/utils.js');
 const SETTINGS = require('../lib/settings.js').settings;
 
@@ -65,9 +67,12 @@ function parseTask (taskId, taskUrl, options = {}) {
           artifact.status = 'downloading';
           saveDownloadsIndex();
         }
+        const loggerPlatform = (str, level) => utils.loggerPlatform(artifact.platform.slug, str, level);
         return fetch(artifact.url).then(res => {
           return new Promise((resolve, reject) => {
             const localFilename = path.resolve(PATHS.downloads, artifact.platform.slug, artifact.basename);
+            let apkTimestamp = '';
+            const versionStr = apkTimestamp => ` ${chalk.gray(apkTimestamp ? `(${taskId} - ${apkTimestamp})` : `(${taskId})`)}`;
             const destStream = fs.createWriteStream(localFilename);
             res.body.pipe(destStream);
             res.body.on('error', err => {
@@ -78,13 +83,14 @@ function parseTask (taskId, taskUrl, options = {}) {
             destStream.on('finish', () => {
               artifact.status = 'downloaded';
               artifact.downloaded = new Date().toJSON();
-              logger.log(`${options.indent}Successfully downloaded "${artifact.platform.slug}" package (${taskUrl})`);
+              apkTimestamp = artifact.downloaded.split('T')[0];
+              loggerPlatform(`Downloaded ${chalk.bold(pkgJson.productName)} for platform "${chalk.cyan(artifact.platform.slug)}"${versionStr(apkTimestamp)}`, 'success');
               saveDownloadsIndex();
               resolve(artifact);
             });
             destStream.on('error', err => {
               saveDownloadsIndex();
-              logger.error(err);
+              loggerPlatform(`Could not download ${chalk.bold(pkgJson.productName)} for platform "${chalk.cyan(artifact.platform.slug)}"${versionStr(apkTimestamp)}: ${err}`, 'error');
               reject(err);
             });
           });

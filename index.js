@@ -194,40 +194,47 @@ function test (url) {
 }
 
 function platformAction (action, url, defaults = {}) {
-  if (!('indent' in defaults)) {
-    defaults.indent = 2;
-  }
-  const options = parseOptions(action, url, defaults);
-  const actionStr = action;
-  let actionPresentStr;
-  let actionPastStr;
-  let displayLogBefore = true;
-  let displayLogAfter = true;
-  let displayError = true;
-  switch (action) {
-    case 'download':
-      actionPresentStr = 'downloading';
-      actionPastStr = 'downloaded';
-      break;
-    case 'install':
-      actionPresentStr = 'installing';
-      actionPastStr = 'installed';
-      break;
-    case 'launch':
-      actionPresentStr = 'launching';
-      actionPastStr = 'launched';
-      displayLogBefore = false;
-      displayLogAfter = false;
-      break;
-    case 'test':
-      actionPresentStr = 'testing';
-      actionPastStr = 'tested';
-      break;
-  }
-  const platformStr = pluralise('platform', 'platforms', options.platformsSlugs.length);
-  const platformListStr = options.platformsSlugs.join('", "');
   return new Promise((resolve, reject) => {
+    if (!('indent' in defaults)) {
+      defaults.indent = 2;
+    }
+    const options = parseOptions(action, url, defaults);
+    const actionStr = action;
+    let actionPresentStr;
+    let actionPastStr;
+    let displayLogBefore = true;
+    let displayLogAfter = true;
+    let displayError = true;
+    switch (action) {
+      case 'download':
+        actionPresentStr = 'downloading';
+        actionPastStr = 'downloaded';
+        displayLogAfter = false;
+        break;
+      case 'install':
+        actionPresentStr = 'installing';
+        actionPastStr = 'installed';
+        displayLogAfter = false;
+        break;
+      case 'launch':
+        actionPresentStr = 'launching';
+        actionPastStr = 'launched';
+        displayLogAfter = false;
+        break;
+      case 'test':
+        actionPresentStr = 'testing';
+        actionPastStr = 'tested';
+        displayLogAfter = false;
+        break;
+    }
+
+    const platformStr = pluralise('platform', 'platforms', options.platformsSlugs.length);
+    const platformListStr = options.platformsSlugs.join('", "');
+
+    const platform = options.platformsSlugs[0];
+
     const loggerPlatform = (str, level) => utils.loggerPlatform(platform, str, level);
+
     if (displayLogBefore) {
       loggerPlatform(uppercaseFirstLetter(actionPresentStr));
     }
@@ -259,6 +266,8 @@ function platformAction (action, url, defaults = {}) {
         throw err;
       }
     });
+  }).catch(err => {
+    logger.error(err);
   });
 }
 
