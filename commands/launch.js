@@ -39,6 +39,7 @@ function launch (options = {}, attempts = 0, abort = false) {
   options = Object.assign({}, {
     platformsSlugs: options.platformsSlugs || [SETTINGS.platform_default],
     forceUpdate: options.forceUpdate,
+    forceUpdateAdb: options.forceUpdateAdb,
     url: options.url,
     verbose: options.verbose
   }, options);
@@ -46,7 +47,7 @@ function launch (options = {}, attempts = 0, abort = false) {
   const silent = !options.verbose;
 
   let result = new Promise(async (resolve, reject) => {
-    const adb = await utils.requireAdb(options.forceUpdate);
+    const adb = await utils.requireAdb(options.forceUpdateAdb);
 
     const platform = options.platformsSlugs[0];
     const loggerPlatform = (str, level) => utils.loggerPlatform(platform, str, level);

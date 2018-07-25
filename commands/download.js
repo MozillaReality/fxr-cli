@@ -106,6 +106,7 @@ function download (options = {}) {
   options = Object.assign({}, {
     platformsSlugs: options.platformsSlugs || [SETTINGS.platform_default],
     forceUpdate: options.forceUpdate,
+    forceUpdateAdb: options.forceUpdateAdb,
     org: options.org || SETTINGS.github_org,
     repo: options.repo || SETTINGS.github_repo,
     indent: options.indent || ''
