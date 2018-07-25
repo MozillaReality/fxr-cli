@@ -75,7 +75,7 @@ function launch (options = {}, attempts = 0, abort = false) {
         shell.exec(`${adb} shell am start -a android.intent.action.VIEW -d "${options.url}" org.mozilla.vrbrowser/.VRBrowserActivity`, {silent});
       } else {
         logger.log(`${options.indent}Launching …`);
-        shell.exec(`${adb} shell am start -n org.mozilla.vrbrowser/.VRBrowserActivity`, {silent});
+        shell.exec(`${adb} shell am start -a android.intent.action.LAUNCH org.mozilla.vrbrowser/org.mozilla.vrbrowser.VRBrowserActivity`, {silent});
       }
 
       // TODO: Return a Promise.
