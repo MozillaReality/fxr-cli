@@ -27,7 +27,7 @@ function install (options = {}) {
       }
 
       const devices = shell.exec(`${adb} devices`, {silent});
-      if (devices.stdout === 'List of devices attached\n\n') {
+      if (devices.stderr || !devices.stdout || devices.stdout === 'List of devices attached\n\n') {
         throw new Error('Could not find connected device');
       }
 

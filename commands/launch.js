@@ -1,8 +1,7 @@
 const child_process = require('child_process');
 const path = require('path');
 
-const logger = require('loggy');
-logger.notificationsTitle = 'fxr';
+const chalk = require('chalk');
 const shell = require('shelljs');
 
 const pkgJson = require('../package.json');
@@ -46,56 +45,59 @@ function launch (options = {}, attempts = 0, abort = false) {
 
   const stdio = silent ? 'ignore' : 'inherit';
 
-  let result = utils.requireAdb(options.forceUpdate).then(adb => {
-    return options.platformsSlugs.map(platform => {
-      const loggerPlatform = (str, level) => utils.loggerPlatform(platform, str, level);
+  let result = new Promise(async (resolve, reject) => {
+    const adb = await utils.requireAdb(options.forceUpdate);
 
-      // TODO: Check if the platform's APK is first installed on the device.
-      const dirPlatform = path.resolve(PATHS.downloads, platform);
-      const pathApk = shell.find(path.join(dirPlatform, '*.apk'));
-      if (!pathApk) {
-        throw new Error(`Could not find APK for platform "${platform}"`);
+    const platform = options.platformsSlugs[0];
+    const loggerPlatform = (str, level) => utils.loggerPlatform(platform, str, level);
+
+    // TODO: Check if the platform's APK is first installed on the device.
+    const dirPlatform = path.resolve(PATHS.downloads, platform);
+    const pathApk = shell.find(path.join(dirPlatform, '*.apk'));
+    if (!pathApk) {
+      throw new Error(`Could not find APK for platform "${platform}"`);
+    }
+
+    const devices = shell.exec(`${adb} devices`, {silent});
+    if (devices.stderr || !devices.stdout || devices.stdout === 'List of devices attached\n\n') {
+      loggerPlatform(`Put on your VR headset`);
+      if (!RETRY || RETRY_DELAY <= 0) {
+        throw new Error('Could not find connected device');
       }
-
-      const devices = shell.exec(`${adb} devices`, {silent});
-      if (devices.stdout === 'List of devices attached\n\n') {
-        loggerPlatform(`Put on your VR headset`);
-        if (!RETRY || RETRY_DELAY <= 0) {
+      timeoutRetry = setTimeout(() => {
+        if (attempts >= MAX_ATTEMPTS) {
+          reset();
           throw new Error('Could not find connected device');
         }
-        timeoutRetry = setTimeout(() => {
-          if (attempts >= MAX_ATTEMPTS) {
-            reset();
-            throw new Error('Could not find connected device');
-          }
-          attempts++;
-          shell.exec(`${adb} kill-server`, {silent});
-          shell.exec(`${adb} start-server`, {silent});
-          launch(options, attempts, abort);
-        }, RETRY_DELAY);
-      } else {
-        reset();
-      }
+        attempts++;
+        shell.exec(`${adb} kill-server`, {silent});
+        shell.exec(`${adb} start-server`, {silent});
+        launch(options, attempts, abort);
+      }, RETRY_DELAY);
+    } else {
+      reset();
+    }
 
-      let cmd;
-      if (options.url) {
-        cmd = child_process.execFileSync(adb, ['shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', options.url, 'org.mozilla.vrbrowser/org.mozilla.vrbrowser.VRBrowserActivity'], {stdio});
-      } else {
-        cmd = child_process.execFileSync(adb, ['shell', 'am', 'start', '-a', 'android.intent.action.VIEW', 'org.mozilla.vrbrowser/org.mozilla.vrbrowser.VRBrowserActivity'], {stdio});
-      }
+    let cmd;
+    if (options.url) {
+      cmd = shell.exec(`${adb} shell am start -a android.intent.action.VIEW -d "${options.url}" org.mozilla.vrbrowser/org.mozilla.vrbrowser.VRBrowserActivity`, {silent});
+    } else {
+      cmd = shell.exec(`${adb} shell am start -a android.intent.action.VIEW org.mozilla.vrbrowser/org.mozilla.vrbrowser.VRBrowserActivity`, {silent});
+    }
 
-      let errMsg;
-      if (cmd.stderr.startsWith('Error')) {
-        errMsg = `Could not launch ${options.url ? options.url : pkgJson.productName}`;
-        loggerPlatform(errMsg, 'error');
-        throw new Error(errMsg);
-      } else {
-        loggerPlatform(`Launched ${options.url ? options.url : pkgJson.productName}`, 'success');
-      }
-
-      // TODO: Return a Promise.
-      return platform;
-    });
+    let errMsg;
+    let launchedObjStr = options.url ? chalk.bold.underline(options.url) : pkgJson.productName;
+    if (cmd.stderr && cmd.stderr.startsWith('Error')) {
+      errMsg = `Could not launch ${launchedObjStr}`;
+      loggerPlatform(errMsg, 'error');
+      reject(errMsg);
+    } else {
+      loggerPlatform(`Launched ${launchedObjStr}`, 'success');
+      resolve({
+        url: options.url,
+        platform
+      });
+    }
   });
 
   result.abort = setForceAbort;
