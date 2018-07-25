@@ -41,6 +41,11 @@ function parseTask (taskId, taskUrl, options = {}) {
   return fetch(URLS.taskcluster.queue(taskId))
     .then(res => res.json())
     .then(data => {
+      if (data.artifacts.length <= 1) {
+        let msg = 'Taskcluster is currently building new APKs … Try again in a few moments';
+        throw new Error(msg);
+        process.exit(1);
+      }
       artifacts = data.artifacts.map(artifact => {
         artifact.url = URLS.taskcluster.artifact(taskId, artifact.name);
         artifact.basename = path.basename(artifact.name);
