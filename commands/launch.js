@@ -2,12 +2,14 @@ const child_process = require('child_process');
 const path = require('path');
 
 const chalk = require('chalk');
+const fs = require('fs-extra');
 const shell = require('shelljs');
 
 const pkgJson = require('../package.json');
 const SETTINGS = require('../lib/settings.js').settings;
 const utils = require('../lib/utils.js');
 
+const LIBRARY_NAME = pkgJson.libraryName || (pkgJson.bin && Object.keys(pkgJson.bin)[0]);
 const MAX_ATTEMPTS = 10; // Number of times to attempt to connect to the device.
 const PATHS = SETTINGS.paths;
 const RETRY_DELAY = 3000; // Time to delay between attempts in milliseconds (default: 3 seconds).
@@ -49,21 +51,32 @@ function launch (options = {}, attempts = 0, abort = false) {
     const platform = options.platformsSlugs[0];
     const loggerPlatform = (str, level) => utils.loggerPlatform(platform, str, level);
 
+    let downloadsMetadata = null;
+    let apkArtifact;
+    let apkLocalPath;
+    try {
+      downloadsMetadata = await fs.readJson(PATHS.downloads_index);
+    } catch (err) {
+    }
+    if (downloadsMetadata) {
+      apkArtifact = downloadsMetadata.artifacts.find(p => p.platform && p.platform.slug === platform);
+      if (apkArtifact) {
+        apkLocalPath = path.resolve(PATHS.downloads, platform, apkArtifact.basename);
+      }
+    }
+
     // TODO: Check if the platform's APK is first installed on the device.
-    const dirPlatform = path.resolve(PATHS.downloads, platform);
-    const pathApk = shell.find(path.join(dirPlatform, '*.apk'));
-    if (!pathApk) {
-      throw new Error(`Could not find APK for platform "${platform}"`);
+    if (!apkLocalPath || !fs.existsSync(apkLocalPath)) {
+      // TODO: Run `download` + `install` if needed: https://github.com/MozillaReality/fxr-cli/issues/28
+      reject(new Error(`${chalk.bold(pkgJson.productName)} is not installed`));
+      loggerPlatform(`First run ${chalk.bold.green.bgBlack(`${LIBRARY_NAME} install`)} to install ${chalk.bold(pkgJson.productName)}`, 'tip');
+      return;
     }
 
     const devices = shell.exec(`${adb} devices`, {silent});
     if (devices.stderr || !devices.stdout || devices.stdout === 'List of devices attached\n\n') {
       if (devices.stdout === 'List of devices attached\n\n') {
-        loggerPlatform(`Ensure that you have enabled "Developer Mode"` +
-          (platform === 'oculusvr' ?
-            ` ${chalk.gray(`(${
-                chalk.underline('https://developer.oculus.com/documentation/mobilesdk/latest/concepts/mobile-device-setup-go/')
-              })`)}` : ''), 'tip');
+        loggerPlatform(utils.getDeveloperModeTip(platform), 'tip');
       }
       loggerPlatform('Put on your VR headset', 'warn');
       if (!RETRY || RETRY_DELAY <= 0) {

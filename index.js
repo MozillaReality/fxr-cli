@@ -157,7 +157,7 @@ function help () {
           },
           {
             desc: bullet('examples', 'Launch a URL in Firefox Reality.'),
-            example: `$ ${binStr} ${cmd('launch')} http://example.com/`
+            example: `$ ${binStr} ${cmd('launch')} "http://example.com/"`
           },
           // TODO: See https://github.com/MozillaReality/fxr-cli/issues/5
           // {
