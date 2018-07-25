@@ -1,3 +1,4 @@
+const child_process = require('child_process');
 const path = require('path');
 
 const logger = require('loggy');
@@ -39,7 +40,10 @@ function launch (options = {}, attempts = 0, abort = false) {
     verbose: options.verbose,
     indent: options.indent || ''
   }, options);
+
   const silent = !options.verbose;
+
+  const stdio = silent ? 'ignore' : 'inherit';
 
   let result = utils.requireAdb(options.forceUpdate).then(adb => {
     return options.platformsSlugs.map(platform => {
@@ -71,11 +75,11 @@ function launch (options = {}, attempts = 0, abort = false) {
       }
 
       if (options.url) {
-        logger.log(`${options.indent}Launching ${options.url} …`);
-        shell.exec(`${adb} shell am start -a android.intent.action.VIEW -d "${options.url}" org.mozilla.vrbrowser/.VRBrowserActivity`, {silent});
+        logger.success(`Launching ${options.url} …`);
+        child_process.execFileSync(adb, ['shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', options.url, 'org.mozilla.vrbrowser/org.mozilla.vrbrowser.VRBrowserActivity'], {stdio});
       } else {
-        logger.log(`${options.indent}Launching …`);
-        shell.exec(`${adb} shell am start -a android.intent.action.LAUNCH org.mozilla.vrbrowser/org.mozilla.vrbrowser.VRBrowserActivity`, {silent});
+        logger.success(`Launching …`);
+        child_process.execFileSync(adb, ['shell', 'am', 'start', '-a', 'android.intent.action.LAUNCH', 'org.mozilla.vrbrowser/org.mozilla.vrbrowser.VRBrowserActivity'], {stdio});
       }
 
       // TODO: Return a Promise.
