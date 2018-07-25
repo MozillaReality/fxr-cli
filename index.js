@@ -199,6 +199,9 @@ function platformAction (action, url, defaults = {}) {
   const actionStr = action;
   let actionPresentStr;
   let actionPastStr;
+  let displayLogBefore = true;
+  let displayLogAfter = true;
+  let displayError = true;
   switch (action) {
     case 'download':
       actionPresentStr = 'downloading';
@@ -211,6 +214,8 @@ function platformAction (action, url, defaults = {}) {
     case 'launch':
       actionPresentStr = 'launching';
       actionPastStr = 'launched';
+      displayLogBefore = false;
+      displayLogAfter = false;
       break;
     case 'test':
       actionPresentStr = 'testing';
@@ -220,7 +225,9 @@ function platformAction (action, url, defaults = {}) {
   const platformStr = pluralise('platform', 'platforms', options.platformsSlugs.length);
   const platformListStr = options.platformsSlugs.join('", "');
   return new Promise((resolve, reject) => {
-    logger.log(`${uppercaseFirstLetter(actionPresentStr)} ${platformStr} "${platformListStr}" …`);
+    if (displayLogBefore) {
+      logger.log(`${uppercaseFirstLetter(actionPresentStr)} ${platformStr} "${platformListStr}" …`);
+    }
     return commands[action].run({
       platformsSlugs: options.platformsSlugs,
       forceUpdate: options.forceUpdate,
@@ -233,16 +240,20 @@ function platformAction (action, url, defaults = {}) {
         return;
       }
       if (completed) {
-        logger.log(`Successfully ${actionPastStr} ${platformStr} "${platformListStr}"`);
-        process.exit(0);
+        if (displayLogAfter) {
+          logger.log(`Successfully ${actionPastStr} ${platformStr} "${platformListStr}"`);
+        }
       }
     }).catch(err => {
-      if (err) {
-        logger.error(`Could not ${actionStr} ${platformStr} "${platformListStr}":`, err);
+      if (displayError) {
+        if (err) {
+          logger.error(`Could not ${actionStr} ${platformStr} "${platformListStr}":`, err);
+        } else {
+          logger.error(`Could not ${actionStr} ${platformStr} "${platformListStr}"`);
+        }
       } else {
-        logger.error(`Could not ${actionStr} ${platformStr} "${platformListStr}"`);
+        throw err;
       }
-      process.exit(1);
     });
   });
 }
