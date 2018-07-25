@@ -159,10 +159,11 @@ function help () {
             desc: bullet('examples', 'Launch a URL in Firefox Reality.'),
             example: `$ ${binStr} ${cmd('launch')} http://example.com/`
           },
-          {
-            desc: bullet('examples', 'Launch a local project in Firefox Reality.'),
-            example: `$ ${binStr} ${cmd('launch')} path/to/project/`
-          }
+          // TODO: See https://github.com/MozillaReality/fxr-cli/issues/5
+          // {
+          //   desc: bullet('examples', 'Launch a local project in Firefox Reality.'),
+          //   example: `$ ${binStr} ${cmd('launch')} path/to/project/`
+          // }
         ]
       },
       {
