@@ -2,6 +2,7 @@
 .sw[ponm]
 .tgz
 *.log
+/*.apk*
 /*.jpeg
 /*.jpg
 /*.mov
