@@ -13,6 +13,7 @@ const LIBRARY_NAME = pkgJson.libraryName || (pkgJson.bin && Object.keys(pkgJson.
 const MAX_ATTEMPTS = 10; // Number of times to attempt to connect to the device.
 const PATHS = SETTINGS.paths;
 const REPORT_DELIMETER = '\t';
+const REPORT_HEADER_ROW = ['url', 'result', 'notes', 'date_reported'];
 const REPORT_PATH = path.join(__dirname, '..', 'report.csv');
 const RETRY_DELAY = 3000; // Time to delay between attempts in milliseconds (default: 3 seconds).
 const RETRY = true; // Whether to attempt to retry the launch.
@@ -125,24 +126,32 @@ function launch (options = {}, attempts = 0, abort = false) {
 
         fs.exists(REPORT_PATH).then(exists => {
           if (exists) {
-            prompt();
-          } else {
-            fs.writeFile(REPORT_PATH, `${['url', 'result', 'notes', 'date_reported'].join(REPORT_DELIMETER)}\n`).then(() => {
-              prompt();
-            });
+            return prompt();
           }
+          return fs.writeFile(REPORT_PATH, `${REPORT_HEADER_ROW.join(REPORT_DELIMETER)}\n`)
+            .then(prompt);
         }).catch(console.error.bind(console));
 
         function prompt () {
-          rl.question(`${chalk.green('GOOD')} or ${chalk.red('BAD')}? `, answer => {
-            answer = answer.trim().toLowerCase();
-            const passed = answer.includes('p') || answer.includes('y') || answer.includes('g');
-            console.log(passed ? chalk.bold.black.bgGreen('PASS') : chalk.bold.black.bgRed('FAIL'), options.url);
-            fs.appendFile(REPORT_PATH, `${[options.url, passed, '', new Date().toJSON()].join(REPORT_DELIMETER)}\n`).then(() => {
-              rl.close();
-            }).catch(err => {
-              console.error(err);
-              rl.close();
+          return new Promise((resolve, reject) => {
+            rl.question(`${chalk.green('GOOD')} or ${chalk.red('BAD')}? `, answer => {
+              answer = answer.trim().toLowerCase();
+              const passed = answer.includes('p') || answer.includes('y') || answer.includes('g');
+              console.log(passed ? chalk.bold.black.bgGreen('PASS') : chalk.bold.black.bgRed('FAIL'), options.url);
+              const row = [options.url || '', passed, '', new Date().toJSON()];
+              fs.appendFile(REPORT_PATH, `${row.join(REPORT_DELIMETER)}\n`).then(() => {
+                resolve({
+                  url: row[0],
+                  passed: row[1],
+                  notes: row[2],
+                  date_reported: row[3]
+                })
+                rl.close();
+              }).catch(err => {
+                console.warn(err);
+                reject(err);
+                rl.close();
+              });
             });
           });
         }
