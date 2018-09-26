@@ -246,7 +246,8 @@ function platformAction (action, url, defaults = {}) {
       url: options.url,
       org: options.org || SETTINGS.github_org,
       repo: options.repo || SETTINGS.github_repo,
-      indent: options.indent || ''
+      indent: options.indent || '',
+      test: options.test
     }).then(completed => {
       if (action === 'test') {
         return;

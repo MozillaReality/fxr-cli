@@ -12,6 +12,8 @@ const utils = require('../lib/utils.js');
 const LIBRARY_NAME = pkgJson.libraryName || (pkgJson.bin && Object.keys(pkgJson.bin)[0]);
 const MAX_ATTEMPTS = 10; // Number of times to attempt to connect to the device.
 const PATHS = SETTINGS.paths;
+const REPORT_DELIMETER = '\t';
+const REPORT_PATH = path.join(__dirname, '..', 'report.csv');
 const RETRY_DELAY = 3000; // Time to delay between attempts in milliseconds (default: 3 seconds).
 const RETRY = true; // Whether to attempt to retry the launch.
 
@@ -112,6 +114,40 @@ function launch (options = {}, attempts = 0, abort = false) {
       reject(errMsg);
     } else {
       loggerPlatform(`Launched ${launchedObjStr}`, 'success');
+
+      if (options.test) {
+        const readline = require('readline');
+
+        const rl = readline.createInterface({
+          input: process.stdin,
+          output: process.stdout
+        });
+
+        fs.exists(REPORT_PATH).then(exists => {
+          if (exists) {
+            prompt();
+          } else {
+            fs.writeFile(REPORT_PATH, `${['url', 'result', 'notes', 'date_reported'].join(REPORT_DELIMETER)}\n`).then(() => {
+              prompt();
+            });
+          }
+        }).catch(console.error.bind(console));
+
+        function prompt () {
+          rl.question(`${chalk.green('GOOD')} or ${chalk.red('BAD')}? `, answer => {
+            answer = answer.trim().toLowerCase();
+            const passed = answer.includes('p') || answer.includes('y') || answer.includes('g');
+            console.log(passed ? chalk.bold.black.bgGreen('PASS') : chalk.bold.black.bgRed('FAIL'), options.url);
+            fs.appendFile(REPORT_PATH, `${[options.url, passed, '', new Date().toJSON()].join(REPORT_DELIMETER)}\n`).then(() => {
+              rl.close();
+            }).catch(err => {
+              console.error(err);
+              rl.close();
+            });
+          });
+        }
+      }
+
       resolve({
         url: options.url,
         platform
