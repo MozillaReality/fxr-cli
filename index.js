@@ -258,6 +258,7 @@ function platformAction (action, url, defaults = {}) {
         }
       }
     }).catch(err => {
+      console.error(err);
       if (displayError) {
         if (err) {
           loggerPlatform(`Could not ${actionStr}: ${err}`, 'error');
