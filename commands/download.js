@@ -16,8 +16,8 @@ const PATHS = SETTINGS.paths;
 const URLS = {
   taskcluster: {
     repo: (org, repo) => `https://github.taskcluster.net/v1/repository/${org}/${repo}/master/latest`,
-    queue: (taskId) => `https://queue.taskcluster.net/v1/task/${taskId}/runs/0/artifacts`,
-    artifact: (taskId, artifactName) => `https://queue.taskcluster.net/v1/task/${taskId}/runs/0/artifacts/${artifactName}`
+    queue: (taskId) => `https://queue.taskcluster.net/v1/task/${taskId}/runs/1/artifacts`,
+    artifact: (taskId, artifactName) => `https://queue.taskcluster.net/v1/task/${taskId}/runs/1/artifacts/${artifactName}`
   }
 };
 

@@ -14,7 +14,7 @@ const LIBRARY_NAME = pkgJson.libraryName || (pkgJson.bin && Object.keys(pkgJson.
 const MAX_ATTEMPTS = 10; // Number of times to attempt to connect to the device.
 const PATHS = SETTINGS.paths;
 const REPORT_DELIMETER = '\t';
-const REPORT_HEADER_ROW = ['url', 'works', 'notes', 'date_reported'];
+const REPORT_HEADER_ROW = ['url', 'works', 'notes', 'platform', 'date_reported'];
 const REPORT_PATH = path.join(__dirname, '..', 'report.csv');
 const REPORT_QUEUE_PATH = path.join(__dirname, '..', 'queue.csv');
 const RETRY_DELAY = 3000; // Time to delay between attempts in milliseconds (default: 3 seconds).
@@ -96,18 +96,19 @@ function launch (options = {}, attempts = 0, abort = false) {
     }
 
     const devices = shell.exec(`${adb} devices`, {silent});
-    if (devices.stderr || !devices.stdout || devices.stdout === 'List of devices attached\n\n') {
-      if (devices.stdout === 'List of devices attached\n\n') {
+    const devicesEmpty = utils.isAdbDevicesListEmpty(devices.stdout);
+    if (devices.stderr || !devices.stdout || devicesEmpty) {
+      if (devicesEmpty) {
         loggerPlatform(utils.getDeveloperModeTip(platform), 'tip');
       }
       loggerPlatform('Put on your VR headset', 'warn');
       if (!RETRY || RETRY_DELAY <= 0) {
-        throw new Error('Could not find connected device');
+        throw new Error('Could not find a connected device');
       }
       timeoutRetry = setTimeout(() => {
         if (attempts >= MAX_ATTEMPTS) {
           reset();
-          throw new Error('Could not find connected device');
+          throw new Error('Could not find a connected device');
         }
         attempts++;
         shell.exec(`${adb} kill-server`, {silent});
@@ -152,10 +153,14 @@ function launch (options = {}, attempts = 0, abort = false) {
 
         loggerPlatform(`Launched ${launchedObjStr}`, 'success');
 
+        let rl;
+
         if (opts.test) {
+          shell.exec(`${adb} shell setprop debug.oculus.enableVideoCapture 1`, {silent});
+
           const readline = require('readline');
 
-          const rl = readline.createInterface({
+          rl = readline.createInterface({
             input: process.stdin,
             output: process.stdout
           });
@@ -167,39 +172,73 @@ function launch (options = {}, attempts = 0, abort = false) {
             return fs.writeFile(REPORT_PATH, `${REPORT_HEADER_ROW.join(REPORT_DELIMETER)}\n`)
               .then(prompt);
           });
-
-          function prompt () {
-            return new Promise((resolvePrompt, rejectPrompt) => {
-              rl.question(`${chalk.green('GOOD')} or ${chalk.red('BAD')}? `, answer => {
-                answer = answer.trim().toLowerCase();
-                const passed = answer.includes('p') || answer.includes('y') || answer.includes('g');
-                console.log(passed ? chalk.bold.black.bgGreen('PASS') : chalk.bold.black.bgRed('FAIL'), opts.url);
-                const row = [opts.url || '', passed ? 'yes' : 'no', '', new Date().toJSON()];
-                fs.appendFile(REPORT_PATH, `${row.join(REPORT_DELIMETER)}\n`).then(() => {
-                  resolvePrompt({
-                    url: row[0],
-                    passed: row[1],
-                    notes: row[2],
-                    date_reported: row[3]
-                  });
-                  rl.close();
-                }).catch(err => {
-                  console.warn(err);
-                  rejectPrompt(err);
-                  rl.close();
-                });
-              });
-            }).then(() => {
-              resolve({
-                url: opts.url,
-                platform
-              });
-            });
-          }
         } else {
           resolve({
             url: opts.url,
             platform
+          });
+        }
+
+        function prompt () {
+          return new Promise((resolvePrompt, rejectPrompt) => {
+            rl.question(`${chalk.green('GOOD')} or ${chalk.red('BAD')}? `, answer => {
+              answer = (answer || '').trim().toLowerCase();
+
+              const passed = answer[0] === 'g' || answer[0] === 'p' || answer[0] === 'y';
+              const failed = answer[0] === 'b' || answer[0] === 'f' || answer[0] === 'b';
+
+              const skipped = !passed && !failed;
+
+              console.log(skipped ? chalk.bold.black.bgWhite('SKIP') : (passed ? chalk.bold.black.bgGreen('PASS') : chalk.bold.black.bgRed('FAIL')), opts.url);
+
+              const notes = answer.replace(/^[p(ass)?|y(es)?|g(ood)?|f(ail)?|no?|b(ad)?]\s*[;,.-/]?\s*/, '');
+              const row = [
+                opts.url || '',
+                passed ? 'yes' : 'no',
+                notes,
+                platform,
+                new Date().toJSON()
+              ];
+
+              if (skipped) {
+                resolvePrompt({
+                  url: row[0],
+                  passed: null,
+                  notes: row[2],
+                  platform: row[3],
+                  date_reported: row[4],
+                  skipped: true
+                });
+                rl.close();
+                return;
+              }
+
+              shell.exec(`${adb} shell setprop debug.oculus.enableVideoCapture 0`, {silent});
+
+              fs.appendFile(REPORT_PATH, `${row.join(REPORT_DELIMETER)}\n`).then(() => {
+                resolvePrompt({
+                  url: row[0],
+                  passed: row[1],
+                  notes: row[2],
+                  platform: row[3],
+                  date_reported: row[4]
+                });
+                rl.close();
+              }).catch(err => {
+                console.warn(err);
+                rejectPrompt(err);
+                rl.close();
+              });
+            });
+          }).then(() => {
+            shell.exec(`${adb} shell setprop debug.oculus.enableVideoCapture 0`, {silent});
+            resolve({
+              url: opts.url,
+              platform
+            });
+          }, err => {
+            console.warn(err);
+            shell.exec(`${adb} shell setprop debug.oculus.enableVideoCapture 0`, {silent});
           });
         }
       });

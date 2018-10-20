@@ -72,19 +72,20 @@ function install (options = {}, attempts = 0, downloaded = false) {
     }
 
     const devices = shell.exec(`${adb} devices`, {silent});
-    if (devices.stderr || !devices.stdout || devices.stdout === 'List of devices attached\n\n') {
-      if (devices.stdout === 'List of devices attached\n\n') {
+    const devicesEmpty = utils.isAdbDevicesListEmpty(devices.stdout);
+    if (devices.stderr || !devices.stdout || devicesEmpty) {
+      if (devicesEmpty) {
         loggerPlatform(utils.getDeveloperModeTip(platform), 'tip');
       }
       shell.exec(`${adb} shell input keyevent 26`, {silent});
       loggerPlatform('Put on your VR headset', 'warn');
       if (!RETRY || RETRY_DELAY <= 0) {
-        throw new Error('Could not find connected device');
+        throw new Error('Could not find a connected device');
       }
       timeoutRetry = setTimeout(() => {
         if (attempts >= MAX_ATTEMPTS) {
           reset();
-          throw new Error('Could not find connected device');
+          throw new Error('Could not find a connected device');
         }
         attempts++;
         shell.exec(`${adb} kill-server`, {silent});
