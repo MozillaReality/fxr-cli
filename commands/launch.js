@@ -154,15 +154,21 @@ function launch (options = {}, attempts = 0, abort = false) {
         loggerPlatform(`Launched ${launchedObjStr}`, 'success');
 
         let rl;
+        const video = (enabled = false) => shell.exec(`${adb} shell setprop debug.oculus.enableVideoCapture ${enabled ? 1 : 0}`, {silent});
 
         if (opts.test) {
-          shell.exec(`${adb} shell setprop debug.oculus.enableVideoCapture 1`, {silent});
+          video(true);
 
           const readline = require('readline');
 
           rl = readline.createInterface({
             input: process.stdin,
             output: process.stdout
+          });
+
+          rl.on('SIGINT', function () {
+            video(false);
+            process.emit('SIGINT'); // This will call `process.exit()` (listener defined in `index.js`).
           });
 
           return fs.exists(REPORT_PATH).then(exists => {
@@ -181,6 +187,8 @@ function launch (options = {}, attempts = 0, abort = false) {
 
         function prompt () {
           return new Promise((resolvePrompt, rejectPrompt) => {
+            video(false);
+
             rl.question(`${chalk.green('GOOD')} or ${chalk.red('BAD')}? `, answer => {
               answer = (answer || '').trim().toLowerCase();
 
@@ -213,7 +221,7 @@ function launch (options = {}, attempts = 0, abort = false) {
                 return;
               }
 
-              shell.exec(`${adb} shell setprop debug.oculus.enableVideoCapture 0`, {silent});
+              video(false);
 
               fs.appendFile(REPORT_PATH, `${row.join(REPORT_DELIMETER)}\n`).then(() => {
                 resolvePrompt({
@@ -231,14 +239,14 @@ function launch (options = {}, attempts = 0, abort = false) {
               });
             });
           }).then(() => {
-            shell.exec(`${adb} shell setprop debug.oculus.enableVideoCapture 0`, {silent});
+            video(false);
             resolve({
               url: opts.url,
               platform
             });
           }, err => {
             console.warn(err);
-            shell.exec(`${adb} shell setprop debug.oculus.enableVideoCapture 0`, {silent});
+            video(false);
           });
         }
       });
