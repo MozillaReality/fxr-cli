@@ -35,6 +35,23 @@ const setForceAbort = () => {
 
 updateUrlsToTest();
 
+class Screenshots {
+  constructor ({adb, silent, pathOutput}) {
+    this.adb = adb;
+    this.silent = silent;
+    this.pathOutput = utils.forceTrailingSlash(pathOutput ||
+                                               process.env.FXR_SCREENSHOTS_PATH ||
+                                               process.env.SCREENSHOTS_PATH ||
+                                               path.join(process.cwd(), 'fxr-screenshots'));
+  }
+
+  capture () {
+    return shell.exec(`${this.adb} exec-out screencap -p > ${this.pathOutput}$(date +%F_%T).png && say 'screenshot saved'`, {
+      silent: this.silent
+    });
+  }
+}
+
 function launch (options = {}, attempts = 0, abort = false) {
   let timeoutRetry = null;
   const reset = () => {
@@ -60,6 +77,8 @@ function launch (options = {}, attempts = 0, abort = false) {
   }, options);
 
   const silent = !options.verbose;
+
+  const screenshots = new Screenshots({adb, silent});
 
   let result = new Promise(async (resolve, reject) => {
     let adb = null;
@@ -158,6 +177,10 @@ function launch (options = {}, attempts = 0, abort = false) {
 
         if (opts.test) {
           video(true);
+
+          if (SCREENSHOTS_PATH) {
+            setInterval(screenshots.capture, 2000);
+          }
 
           const readline = require('readline');
 
