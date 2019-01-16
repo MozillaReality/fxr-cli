@@ -157,7 +157,7 @@ function launch (options = {}, attempts = 0, abort = false) {
         const video = (enabled = false) => shell.exec(`${adb} shell setprop debug.oculus.enableVideoCapture ${enabled ? 1 : 0}`, {silent});
 
         if (opts.test) {
-          video(true);
+          // video(true);
 
           const readline = require('readline');
 
@@ -167,7 +167,7 @@ function launch (options = {}, attempts = 0, abort = false) {
           });
 
           rl.on('SIGINT', function () {
-            video(false);
+            // video(false);
             process.emit('SIGINT'); // This will call `process.exit()` (listener defined in `index.js`).
           });
 
@@ -187,7 +187,7 @@ function launch (options = {}, attempts = 0, abort = false) {
 
         function prompt () {
           return new Promise((resolvePrompt, rejectPrompt) => {
-            video(false);
+            // video(false);
 
             rl.question(`${chalk.green('GOOD')} or ${chalk.red('BAD')}? `, answer => {
               answer = (answer || '').trim().toLowerCase();
@@ -225,7 +225,7 @@ function launch (options = {}, attempts = 0, abort = false) {
                 return;
               }
 
-              video(false);
+              // video(false);
 
               fs.appendFile(REPORT_PATH, `${row.join(REPORT_DELIMETER)}\n`).then(() => {
                 resolvePrompt({
@@ -243,14 +243,14 @@ function launch (options = {}, attempts = 0, abort = false) {
               });
             });
           }).then(() => {
-            video(false);
+            // video(false);
             resolve({
               url: opts.url,
               platform
             });
           }, err => {
             console.warn(err);
-            video(false);
+            // video(false);
           });
         }
       });
