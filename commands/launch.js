@@ -193,17 +193,20 @@ function launch (options = {}, attempts = 0, abort = false) {
               answer = (answer || '').trim().toLowerCase();
 
               const passed = answer[0] === 'g' || answer[0] === 'p' || answer[0] === 'y';
-              const failed = answer.includes(' ') || answer[0] === 'b' || answer[0] === 'f' || answer[0] === 'b';
+              const failed = answer[0] === 'b' || answer[0] === 'f' || answer[0] === 'n';
 
               const skipped = !passed && !failed;
 
-              console.log(skipped ? chalk.bold.black.bgWhite('SKIP') : (passed ? chalk.bold.black.bgGreen('PASS') : chalk.bold.black.bgRed('FAIL')), opts.url);
+              console.log(
+                skipped ? chalk.bold.black.bgWhite('SKIP') : (passed ? chalk.bold.black.bgGreen('PASS') : chalk.bold.black.bgRed('FAIL')),
+                opts.url
+              );
 
               const notes = answer.includes(' ') ? answer.replace(/^.+?\s*[;,.-\/]+(.+)/, '$1').trim() : '';
 
               const row = [
                 opts.url || '',
-                passed ? 'yes' : 'no',
+                skipped ? 'skipped' : (passed ? 'yes' : 'no'),
                 notes,
                 platform,
                 new Date().toJSON()
