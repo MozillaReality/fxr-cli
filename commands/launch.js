@@ -45,6 +45,10 @@ class Screenshots {
                                                path.join(process.cwd(), 'fxr-screenshots'));
   }
 
+  get interval () {
+    return parseInt(process.env.FXR_SCREENSHOTS_INTERVAL || process.env.SCREENSHOTS_INTERVAL || '2000', 10);
+  }
+
   capture () {
     return shell.exec(`${this.adb} exec-out screencap -p > ${this.pathOutput}$(date +%F_%T).png && say 'screenshot saved'`, {
       silent: this.silent
@@ -179,7 +183,7 @@ function launch (options = {}, attempts = 0, abort = false) {
           video(true);
 
           if (SCREENSHOTS_PATH) {
-            setInterval(screenshots.capture, 2000);
+            setInterval(screenshots.capture, screenshots.interval);
           }
 
           const readline = require('readline');
@@ -216,7 +220,7 @@ function launch (options = {}, attempts = 0, abort = false) {
               answer = (answer || '').trim().toLowerCase();
 
               const passed = answer[0] === 'g' || answer[0] === 'p' || answer[0] === 'y';
-              const failed = answer.includes(' ') || answer[0] === 'b' || answer[0] === 'f' || answer[0] === 'b';
+              const failed = answer[0] === 'b' || answer[0] === 'f' || answer[0] === 'n';
 
               const skipped = !passed && !failed;
 
