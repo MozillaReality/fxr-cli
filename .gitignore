@@ -3,6 +3,7 @@
 .tgz
 *.log
 /*.apk*
+/*.csv
 /*.jpeg
 /*.jpg
 /*.mov

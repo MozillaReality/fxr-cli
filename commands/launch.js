@@ -1,4 +1,5 @@
-const child_process = require('child_process');
+'use strict';
+
 const path = require('path');
 
 const chalk = require('chalk');
@@ -12,13 +13,27 @@ const utils = require('../lib/utils.js');
 const LIBRARY_NAME = pkgJson.libraryName || (pkgJson.bin && Object.keys(pkgJson.bin)[0]);
 const MAX_ATTEMPTS = 10; // Number of times to attempt to connect to the device.
 const PATHS = SETTINGS.paths;
+const REPORT_DELIMETER = '\t';
+const REPORT_HEADER_ROW = ['url', 'works', 'notes', 'date_reported'];
+const REPORT_PATH = path.join(__dirname, '..', 'report.csv');
+const REPORT_QUEUE_PATH = path.join(__dirname, '..', 'queue.csv');
 const RETRY_DELAY = 3000; // Time to delay between attempts in milliseconds (default: 3 seconds).
 const RETRY = true; // Whether to attempt to retry the launch.
 
+let urlsToTest = [];
+const updateUrlsToTest = () => {
+  try {
+    const urlsToTestStr = fs.readFileSync(REPORT_QUEUE_PATH);
+    urlsToTest = urlsToTestStr.toString().trim().replace(/^url.*/i, '').trim().split('\n').map(line => line.trim());
+  } catch (err) {
+  }
+};
 let forceAbort = false;
 const setForceAbort = () => {
   forceAbort = true;
 };
+
+updateUrlsToTest();
 
 function launch (options = {}, attempts = 0, abort = false) {
   let timeoutRetry = null;
@@ -47,7 +62,12 @@ function launch (options = {}, attempts = 0, abort = false) {
   const silent = !options.verbose;
 
   let result = new Promise(async (resolve, reject) => {
-    const adb = await utils.requireAdb(options.forceUpdateAdb);
+    let adb = null;
+    try {
+      adb = await utils.requireAdb(options.forceUpdateAdb);
+    } catch (err) {
+      throw err;
+    }
 
     const platform = options.platformsSlugs[0];
     const loggerPlatform = (str, level) => utils.loggerPlatform(platform, str, level);
@@ -58,6 +78,7 @@ function launch (options = {}, attempts = 0, abort = false) {
     try {
       downloadsMetadata = await fs.readJson(PATHS.downloads_index);
     } catch (err) {
+      throw err;
     }
     if (downloadsMetadata) {
       apkArtifact = downloadsMetadata.artifacts.find(p => p.platform && p.platform.slug === platform);
@@ -97,24 +118,90 @@ function launch (options = {}, attempts = 0, abort = false) {
       reset();
     }
 
-    let cmd;
-    if (options.url) {
-      cmd = shell.exec(`${adb} shell am start -a android.intent.action.VIEW -d "${options.url}" org.mozilla.vrbrowser/org.mozilla.vrbrowser.VRBrowserActivity`, {silent});
+    if (options.test) {
+      let result = [];
+      for (let idx = 0; idx < urlsToTest.length; idx++) {
+        try {
+          updateUrlsToTest();
+          result.push(await launchUrl({url: urlsToTest[idx], test: true}));
+        } catch (err) {
+          reject(err);
+        }
+      }
+      resolve(result);
     } else {
-      cmd = shell.exec(`${adb} shell am start -a android.intent.action.VIEW org.mozilla.vrbrowser/org.mozilla.vrbrowser.VRBrowserActivity`, {silent});
+      resolve(launchUrl({url: options.url}));
     }
 
-    let errMsg;
-    let launchedObjStr = options.url ? chalk.bold.underline(options.url) : chalk.bold(pkgJson.productName);
-    if (cmd.stderr && cmd.stderr.startsWith('Error')) {
-      errMsg = `Could not launch ${launchedObjStr}`;
-      loggerPlatform(errMsg, 'error');
-      reject(errMsg);
-    } else {
-      loggerPlatform(`Launched ${launchedObjStr}`, 'success');
-      resolve({
-        url: options.url,
-        platform
+    function launchUrl (opts) {
+      return new Promise((resolve, reject) => {
+        opts = typeof opts === 'string' ? {url: opts} : opts || {};
+        let cmd;
+        if (opts.url) {
+          cmd = shell.exec(`${adb} shell am start -a android.intent.action.VIEW -d "${opts.url}" org.mozilla.vrbrowser/org.mozilla.vrbrowser.VRBrowserActivity`, {silent});
+        } else {
+          cmd = shell.exec(`${adb} shell am start -a android.intent.action.VIEW org.mozilla.vrbrowser/org.mozilla.vrbrowser.VRBrowserActivity`, {silent});
+        }
+        let errMsg;
+        let launchedObjStr = opts.url ? chalk.bold.underline(opts.url) : chalk.bold(pkgJson.productName);
+        if (cmd.stderr && cmd.stderr.startsWith('Error')) {
+          errMsg = `Could not launch ${launchedObjStr}`;
+          loggerPlatform(errMsg, 'error');
+          return reject(errMsg);
+        }
+
+        loggerPlatform(`Launched ${launchedObjStr}`, 'success');
+
+        if (opts.test) {
+          const readline = require('readline');
+
+          const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout
+          });
+
+          return fs.exists(REPORT_PATH).then(exists => {
+            if (exists) {
+              return prompt();
+            }
+            return fs.writeFile(REPORT_PATH, `${REPORT_HEADER_ROW.join(REPORT_DELIMETER)}\n`)
+              .then(prompt);
+          });
+
+          function prompt () {
+            return new Promise((resolvePrompt, rejectPrompt) => {
+              rl.question(`${chalk.green('GOOD')} or ${chalk.red('BAD')}? `, answer => {
+                answer = answer.trim().toLowerCase();
+                const passed = answer.includes('p') || answer.includes('y') || answer.includes('g');
+                console.log(passed ? chalk.bold.black.bgGreen('PASS') : chalk.bold.black.bgRed('FAIL'), opts.url);
+                const row = [opts.url || '', passed ? 'yes' : 'no', '', new Date().toJSON()];
+                fs.appendFile(REPORT_PATH, `${row.join(REPORT_DELIMETER)}\n`).then(() => {
+                  resolvePrompt({
+                    url: row[0],
+                    passed: row[1],
+                    notes: row[2],
+                    date_reported: row[3]
+                  });
+                  rl.close();
+                }).catch(err => {
+                  console.warn(err);
+                  rejectPrompt(err);
+                  rl.close();
+                });
+              });
+            }).then(() => {
+              resolve({
+                url: opts.url,
+                platform
+              });
+            });
+          }
+        } else {
+          resolve({
+            url: opts.url,
+            platform
+          });
+        }
       });
     }
   });
