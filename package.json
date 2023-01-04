@@ -40,7 +40,7 @@
     "node-fetch": "^2.1.2",
     "picture-tube": "https://github.com/cvan/picture-tube#c8fc4c4",
     "shelljs": "^0.8.2",
-    "testcafe": "^0.20.4"
+    "testcafe": "^2.2.0"
   },
   "devDependencies": {
     "cross-spawn": "^6.0.5",
